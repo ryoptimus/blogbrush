@@ -8,6 +8,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+class Post:
+    def __init__(self, id, url, type, date, timestamp, summary, tags):
+        self.id = id
+        self.url = url
+        self.type = type
+        self.date = date
+        self.timestamp = timestamp
+        self.summary = summary
+        self.tags = tags
+
+    def __repr__(self):
+        return (
+            f"Post(id={self.id},\n\t"
+            f"url='{self.url}',\n\t"
+            f"type='{self.type}',\n\t"
+            f"date='{self.date}',\n\t"
+            f"timestamp={self.timestamp},\n\t"
+            f"summary='{self.summary}',\n\t"
+            f"tags={self.tags})"
+        )
+
 consumer_key = os.getenv('CONSUMER_KEY')
 consumer_secret = os.getenv('CONSUMER_SECRET')
 token = os.getenv('TOKEN')
@@ -172,30 +193,30 @@ def parse_qparams(qparams):
             type = 'subtweet'
             type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
             while type not in type_options:
-                type = input('Post type (text, quote, link, answer, video, audio, photo, chat): ')
+                type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
             print(f'You have chosen {type} as your post type.')
         elif qp == 'h' or qp == 'hashtag':
             while not tag_is_valid(tag):
-                tag = input('Input a valid tag. The tag may not include commas. ')
+                tag = input('\tInput a valid tag. The tag may not include commas. ')
             print(f'You have chosen {tag} as a tag for filtering.')
             tag = format_tag(tag)
         elif qp == 'o' or qp == 'offset':
             while not offset.isdigit():
-                offset = input('Offset (post number to start at): ')
+                offset = input('\tOffset (post number to start at): ')
             print(f'You have chosen {offset} as your offset.')
         elif qp == 'b' or qp == 'before':
             while not datestring_is_valid(before):
-                before = input('Input the desired date to search before.\n' \
-                'Date must be entered in year-month-date-hour-minute format separated by spaces.\nYour entry: ')
+                before = input('\tInput the desired date to search before.\n\t' \
+                'Date must be entered in year-month-date-hour-minute format separated by spaces.\n\tYour entry: ')
             print(f'You have entered {before} as your desired search-before date.')
         elif qp == 'a' or qp == 'after':
             while not datestring_is_valid(after):
-                after = input('Input the desired date to search after.\n' \
+                after = input('\tInput the desired date to search after.\n' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.\nYour entry: ')
             print(f'You have entered {after} as your desired search-after date.')
         elif qp == 'l' or qp == 'limit':
             while not limit_is_valid(limit):
-                limit = input('Input limit of posts to alter / read (1-20): ')
+                limit = input('\tInput limit of posts to alter / read (1-20): ')
             print(f'You have entered {limit} as your desired limit.')
         else:
             print('You have no query parameters to set. Cool.')
@@ -288,26 +309,60 @@ def read_posts(request_url, oauth):
         print(f"Error: {error}")
 
 def delete_posts(request_url, qparams, oauth):
+    # Get posts
     try:
         response = requests.get(request_url, auth=oauth)
         response.raise_for_status()
-        data = response.json()
-        print(json.dumps(data['response']['posts'], indent=2))
-        post_ids = [post['id'] for post in data['response']['posts']]
-        post_timestamps = [post['timestamp'] for post in data['response']['posts']]
-        post_urls = [post['post_url'] for post in data['response']['posts']]
-        post_summaries = [post['summary'] for post in data['response']['posts']]
-        post_tags = [post['tags'] for post in data['response']['posts']]
-        print(request_url)
-        print(post_ids)
-        print(post_timestamps)
-        print(post_urls)
-        print(post_summaries)
-        print(post_tags)
-        # if not ('l' in qparams or 'limit' in qparams):
-
+        
     except requests.exceptions.RequestException as error:
         print(f"Error: {error}")
+
+    # Parse JSON
+    try:
+        data = response.json()
+        print(json.dumps(data['response']['posts'], indent=2))
+    except ValueError as error:
+        print(f"Error parsing JSON: {error}")
+        return
+
+    posts = []
+    for p in data['response']['posts']:
+        post = Post(
+            p['id'],
+            p['post_url'],
+            p['type'],
+            p['date'],
+            p['timestamp'],
+            p['summary'],
+            p['tags']
+        )
+        posts.append(post)
+
+    print(request_url)
+    # Split at '/v2/blog/' to get the blog part first
+    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+
+    # Split at '.' to get the blog identifier
+    blog_id = blog_part.split('/')[0]
+    print(blog_id)
+
+    for post in posts:
+        print(post)
+        delete_url = f'https://api.tumblr.com/v2/blog/{blog_id}/post/delete'
+        payload = {
+            'id': post.id
+        }
+
+        try:
+            del_response = requests.post(delete_url, auth=oauth, data=payload)
+            del_response.raise_for_status()
+        except requests.exceptions.RequestException as error:
+            print(f"Error deleting post {post.id}: {error}")
+            continue
+
+        print(f"Post {post.id} deleted successfully:", del_response.json())
+    
+    # if not ('l' in qparams or 'limit' in qparams):
 
 def run_session():
     blog_name, target, request_url, function, qparams = get_user_input()
