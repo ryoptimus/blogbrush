@@ -299,17 +299,8 @@ def get_user_input():
 
     return blog_name, target, request_url, function, qparams
 
-def read_posts(request_url, oauth):
-    try:
-        response = requests.get(request_url, auth=oauth)
-        response.raise_for_status()
-        data = response.json()
-        print(json.dumps(data['response']['posts'], indent=2))
-    except requests.exceptions.RequestException as error:
-        print(f"Error: {error}")
-
-def delete_posts(request_url, qparams, oauth):
-    # Get posts
+def get_posts(request_url, oauth):
+        # Get posts
     try:
         response = requests.get(request_url, auth=oauth)
         response.raise_for_status()
@@ -321,9 +312,40 @@ def delete_posts(request_url, qparams, oauth):
     try:
         data = response.json()
         print(json.dumps(data['response']['posts'], indent=2))
+        return data
     except ValueError as error:
         print(f"Error parsing JSON: {error}")
         return
+
+def read_posts(request_url, oauth):
+    data = get_posts(request_url, oauth)
+
+    posts = []
+    for p in data['response']['posts']:
+        post = Post(
+            p['id'],
+            p['post_url'],
+            p['type'],
+            p['date'],
+            p['timestamp'],
+            p['summary'],
+            p['tags']
+        )
+        posts.append(post)
+
+    print(request_url)
+    # Split at '/v2/blog/' to get the blog part first
+    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+
+    # Split at '.' to get the blog identifier
+    blog_id = blog_part.split('/')[0]
+    print(blog_id)
+
+    for post in posts:
+        print(post)
+
+def delete_posts(request_url, qparams, oauth):
+    data = get_posts(request_url, oauth)
 
     posts = []
     for p in data['response']['posts']:
@@ -349,12 +371,12 @@ def delete_posts(request_url, qparams, oauth):
     for post in posts:
         print(post)
         delete_url = f'https://api.tumblr.com/v2/blog/{blog_id}/post/delete'
-        payload = {
+        data = {
             'id': post.id
         }
 
         try:
-            del_response = requests.post(delete_url, auth=oauth, data=payload)
+            del_response = requests.post(delete_url, auth=oauth, data=data)
             del_response.raise_for_status()
         except requests.exceptions.RequestException as error:
             print(f"Error deleting post {post.id}: {error}")
