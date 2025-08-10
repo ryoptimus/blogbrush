@@ -124,20 +124,38 @@ def format_tag(tag):
     formatted_tag = tag.replace(' ', '+')
     return formatted_tag
 
-def get_qparams():
+def get_qparams(target):
     qparams = 'x x x x'
-    while not qparams_are_valid(qparams):
-        qparams = input('\nWhat query parameters would you like to specify?\n\t' \
+
+    if target == 'p' or target == 'posts':
+        input_prompt = '\nWhat query parameters would you like to specify?\n\t' \
         'Type (t, type): the type of post to return\n\t' \
         'Tag (h, hashtag): limits the response to posts with the specified tag(s)\n\t' \
-        'Offset (o, offset): post number to start at\n\t' \
+        'Offset (o, offset): post number to start at (0 is the first post)\n\t' \
         'Before (b, before): returns posts published before a specified timestamp\n\t' \
         'After (a, after): returns posts published before a specified timestamp\n\t' \
-        'Limit (l, limit): the number of posts to return (1–20, inclusive)\n\t' \
+        'Limit (l, limit): the number of results to return (1–20, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
         'Your selection should be a string of characters separated by spaces.\n\t\t' \
         'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
-        'Selection: ')
+        'Selection: '
+    elif target == 'l' or target == 'likes':
+        input_prompt = '\nWhat query parameters would you like to specify?\n\t' \
+        'Offset (o, offset): post number to start at\n\t' \
+        'Before (b, before): returns posts liked before a specified timestamp\n\t' \
+        'After (a, after): returns posts liked before a specified timestamp\n\t' \
+        'Limit (l, limit): the number of results to return (1–20, inclusive)\n\t' \
+        'None (n, none): indicates no selection\n\n\t' \
+        'Your selection should be a string of characters separated by spaces.\n\t\t' \
+        'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
+        'Selection: '
+    # Drafts only support before_id and filter as query parameters but idc about those
+    else:
+        qparams = 'n'
+        return qparams
+
+    while not qparams_are_valid(qparams):
+        qparams = input(input_prompt)
     
     qparams = list(qparams)
     return qparams

@@ -56,7 +56,7 @@ def get_user_input():
     target = get_target()
     request_url = form_request_url(blog_name, target)
     function = get_function()
-    qparams = get_qparams()
+    qparams = get_qparams(target)
     request_url = append_qparams_to_url(request_url, qparams)
 
     return blog_name, target, request_url, function, qparams
