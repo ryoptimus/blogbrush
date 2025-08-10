@@ -31,16 +31,27 @@ def get_target():
 
     return target
 
-def get_function():
+def get_function(target):
     function = 'x'
-    functions = ['r', 'read',
-                 'd', 'delete',
-                 'e', 'edit']
+    if target == 'p' or target == 'posts':
+        functions = ['r', 'read',
+                    'd', 'delete',
+                    'e', 'edit']
+        prompt_string = '\nWhat do you want to do with these posts?\n\t' \
+        'For reading, type r or read.\n\tFor deleting, type d or delete.\n\t' \
+        'For editing, type e or edit.\n\n\tSelection: '
+    elif target == 'l' or target == 'likes':
+        functions = ['r', 'read',
+                     'u', 'unlike']
+        prompt_string = '\nWhat do you want to do with these posts?\n\t' \
+        'For reading, type r or read.\n\tFor unliking, type u or unlike.\n\n\t' \
+        'Selection: '
+    else:
+        # IDK what else you can do with drafts and idrc rn
+        return 'r'
     
     while function.lower() not in functions:
-        function = input('\nWhat do you want to do with these posts?\n\t' \
-        'For reading, type r or read.\n\tFor deleting, type d or delete.\n\t' \
-        'For editing, type e or edit.\n\n\tSelection: ')
+        function = input(prompt_string)
     
     return function
 
@@ -109,6 +120,39 @@ def datestring_is_valid(datestring):
         print('Invalid minute(s). Minute value must be between 0 and 59.')
         return False
     return True
+
+def datestring_to_readable_format(datestring):
+    datestring_formatted = ''
+    date_parts = datestring.split(' ')
+
+    if int(date_parts[1]) == 1:
+        month = 'January'
+    elif int(date_parts[1]) == 2:
+        month = 'February'
+    elif int(date_parts[1]) == 3:
+        month = 'March'
+    elif int(date_parts[1]) == 4:
+        month = 'April'
+    elif int(date_parts[1]) == 5:
+        month = 'May'
+    elif int(date_parts[1]) == 6:
+        month = 'June'
+    elif int(date_parts[1]) == 7:
+        month = 'July'
+    elif int(date_parts[1]) == 8:
+        month = 'August'
+    elif int(date_parts[1]) == 9:
+        month = 'September'
+    elif int(date_parts[1]) == 10:
+        month = 'October'
+    elif int(date_parts[1]) == 11:
+        month = 'November'
+    else:
+        month = 'December'
+
+    datestring_formatted += f'{date_parts[3]}:{date_parts[4]} {date_parts[2]} {month} {date_parts[0]}'
+
+    return datestring_formatted
 
 def limit_is_valid(limit):
     if not limit:
@@ -192,12 +236,12 @@ def parse_qparams(qparams):
             while not datestring_is_valid(before):
                 before = input('\tInput the desired date to search before.\n\t' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.\n\tYour entry: ')
-            print(f'You have entered {before} as your desired search-before date.')
+            print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.')
         elif qp == 'a' or qp == 'after':
             while not datestring_is_valid(after):
                 after = input('\tInput the desired date to search after.\n' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.\nYour entry: ')
-            print(f'You have entered {after} as your desired search-after date.')
+            print(f'You have entered {datestring_to_readable_format(after)} as your desired search-after date.')
         elif qp == 'l' or qp == 'limit':
             while not limit_is_valid(limit):
                 limit = input('\tInput limit of posts to alter / read (1-20): ')

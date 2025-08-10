@@ -55,14 +55,14 @@ def get_user_input():
     blog_name = get_blog_name()
     target = get_target()
     request_url = form_request_url(blog_name, target)
-    function = get_function()
+    function = get_function(target)
     qparams = get_qparams(target)
     request_url = append_qparams_to_url(request_url, qparams)
 
     return blog_name, target, request_url, function, qparams
 
 def get_posts(request_url, oauth):
-        # Get posts
+    # Get posts
     try:
         response = requests.get(request_url, auth=oauth)
         response.raise_for_status()
@@ -84,6 +84,51 @@ def read_posts(request_url, oauth):
 
     posts = []
     for p in data['response']['posts']:
+        post = Post(
+            p['id'],
+            p['post_url'],
+            p['type'],
+            p['date'],
+            p['timestamp'],
+            p['summary'],
+            p['tags']
+        )
+        posts.append(post)
+
+    print(request_url)
+    # Split at '/v2/blog/' to get the blog part first
+    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+
+    # Split at '.' to get the blog identifier
+    blog_id = blog_part.split('/')[0]
+    print(blog_id)
+
+    for post in posts:
+        print(post)
+
+def get_likes(request_url, oauth):
+    # Get likes
+    try:
+        response = requests.get(request_url, auth=oauth)
+        response.raise_for_status()
+        
+    except requests.exceptions.RequestException as error:
+        print(f"Error: {error}")
+
+    # Parse JSON
+    try:
+        data = response.json()
+        print(json.dumps(data['response']['liked_posts'], indent=2))
+        return data
+    except ValueError as error:
+        print(f"Error parsing JSON: {error}")
+        return
+
+def read_likes(request_url, oauth):
+    data = get_likes(request_url, oauth)
+
+    posts = []
+    for p in data['response']['liked_posts']:
         post = Post(
             p['id'],
             p['post_url'],
@@ -161,10 +206,15 @@ def run_session():
 
     if function == 'r' or function == 'read':
         print('You have chosen to read posts.')
-        read_posts(request_url, oauth)
+        if target == 'p' or target == 'posts':
+            read_posts(request_url, oauth)
+        elif target == 'l' or target == 'likes':
+            read_likes(request_url, oauth)
     elif function == 'd' or function == 'delete':
         print('You have chosen to delete posts.')
         delete_posts(request_url, qparams, oauth)
+    elif function == 'u' or function == 'unlike':
+        print('You have chosen to unlike posts.')
     else:
         print('You have chosen to edit posts.')
 
