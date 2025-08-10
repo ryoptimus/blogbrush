@@ -73,7 +73,7 @@ def get_posts(request_url, oauth):
     # Parse JSON
     try:
         data = response.json()
-        print(json.dumps(data['response']['posts'], indent=2))
+        # print(json.dumps(data['response']['posts'], indent=2))
         return data
     except ValueError as error:
         print(f"Error parsing JSON: {error}")

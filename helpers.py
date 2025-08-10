@@ -213,42 +213,42 @@ def parse_qparams(qparams):
     limit = None
     none = None
 
-    if not ('n' in qparams or 'none' in qparams):
+    if 'n' in qparams or 'none' in qparams:
+        print('You have no query parameters to set. Cool.')
+        none = True
+    else:
         print('\nPlease provide values for your chosen query parameters.\n' \
               'If an invalid value is provided, you will be prompted to input the value again.\n')
-    for qp in qparams:
-        if qp == 't' or qp == 'type':
-            type = 'subtweet'
-            type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
-            while type not in type_options:
-                type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
-            print(f'You have chosen {type} as your post type.')
-        elif qp == 'h' or qp == 'hashtag':
-            while not tag_is_valid(tag):
-                tag = input('\tInput a valid tag. The tag may not include commas. ')
-            print(f'You have chosen {tag} as a tag for filtering.')
-            tag = format_tag(tag)
-        elif qp == 'o' or qp == 'offset':
-            while not offset.isdigit():
-                offset = input('\tOffset (post number to start at): ')
-            print(f'You have chosen {offset} as your offset.')
-        elif qp == 'b' or qp == 'before':
-            while not datestring_is_valid(before):
-                before = input('\tInput the desired date to search before.\n\t' \
-                'Date must be entered in year-month-date-hour-minute format separated by spaces.\n\tYour entry: ')
-            print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.')
-        elif qp == 'a' or qp == 'after':
-            while not datestring_is_valid(after):
-                after = input('\tInput the desired date to search after.\n' \
-                'Date must be entered in year-month-date-hour-minute format separated by spaces.\nYour entry: ')
-            print(f'You have entered {datestring_to_readable_format(after)} as your desired search-after date.')
-        elif qp == 'l' or qp == 'limit':
-            while not limit_is_valid(limit):
-                limit = input('\tInput limit of posts to alter / read (1-20): ')
-            print(f'You have entered {limit} as your desired limit.')
-        else:
-            print('You have no query parameters to set. Cool.')
-            none = True
+        for qp in qparams:
+            if qp == 't' or qp == 'type':
+                type = 'subtweet'
+                type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
+                while type not in type_options:
+                    type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
+                print(f'You have chosen {type} as your post type.\n')
+            elif qp == 'h' or qp == 'hashtag':
+                while not tag_is_valid(tag):
+                    tag = input('\tInput a valid tag. The tag may not include commas. ')
+                print(f'You have chosen {tag} as a tag for filtering.\n')
+                tag = format_tag(tag)
+            elif qp == 'o' or qp == 'offset':
+                while not offset.isdigit():
+                    offset = input('\tOffset (post number to start at): ')
+                print(f'You have chosen {offset} as your offset.\n')
+            elif qp == 'b' or qp == 'before':
+                while not datestring_is_valid(before):
+                    before = input('\tInput the desired date to search before.\n\t' \
+                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\n\tYour entry: ')
+                print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
+            elif qp == 'a' or qp == 'after':
+                while not datestring_is_valid(after):
+                    after = input('\tInput the desired date to search after.\n' \
+                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\nYour entry: ')
+                print(f'You have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
+            elif qp == 'l' or qp == 'limit':
+                while not limit_is_valid(limit):
+                    limit = input('\tInput limit of posts to alter / read (1-20): ')
+                print(f'You have entered {limit} as your desired limit.\n')
 
     return type, tag, offset, before, after, limit, none
 
