@@ -140,13 +140,13 @@ def read_likes(request_url, oauth):
         )
         posts.append(post)
 
-    print(request_url)
+    print(f'Request URL: {request_url}')
     # Split at '/v2/blog/' to get the blog part first
     blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
-    print(blog_id)
+    # print(blog_id)
 
     for post in posts:
         print(post)
@@ -167,13 +167,13 @@ def delete_posts(request_url, qparams, oauth):
         )
         posts.append(post)
 
-    print(request_url)
+    print(f'Request URL: {request_url}')
     # Split at '/v2/blog/' to get the blog part first
     blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
-    print(blog_id)
+    # print(blog_id)
 
     for post in posts:
         print(post)
@@ -189,7 +189,7 @@ def delete_posts(request_url, qparams, oauth):
             print(f"Error deleting post {post.id}: {error}")
             continue
 
-        print(f"Post {post.id} deleted successfully:", del_response.json())
+        print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})')
     
     # if not ('l' in qparams or 'limit' in qparams):
 
