@@ -37,13 +37,13 @@ def get_function(target):
         functions = ['r', 'read',
                     'd', 'delete',
                     'e', 'edit']
-        prompt_string = '\nWhat do you want to do with these posts?\n\t' \
+        prompt_string = 'What do you want to do with these posts?\n\t' \
         'For reading, type r or read.\n\tFor deleting, type d or delete.\n\t' \
         'For editing, type e or edit.\n\n\tSelection: '
     elif target == 'l' or target == 'likes':
         functions = ['r', 'read',
                      'u', 'unlike']
-        prompt_string = '\nWhat do you want to do with these posts?\n\t' \
+        prompt_string = 'What do you want to do with these posts?\n\t' \
         'For reading, type r or read.\n\tFor unliking, type u or unlike.\n\n\t' \
         'Selection: '
     else:
@@ -107,20 +107,21 @@ def datestring_is_valid(datestring):
 
     if len(date_parts) != 5:
         return False
-    if int(date_parts[0]) > 2025 or int(date_parts[0]) < 1970:
-        print('Invalid year. Year value must be between 1970 and 2025.')
+    if int(date_parts[0]) > 2025 or int(date_parts[0]) < 2007:
+        # Tumblr was founded in 2007. Year must be after that
+        print('\tInvalid year. Year value must be between 2007 and 2025.')
         return False
     if int(date_parts[1]) < 1 or int(date_parts[1]) > 12:
-        print('Invalid month. Month value must be between 1 and 12.')
+        print('\tInvalid month. Month value must be between 1 and 12.')
         return False
     if int(date_parts[2]) < 1 or int(date_parts[2]) > 31:
-        print('Invalid day. Day value must be between 1 and 31.')
+        print('\tInvalid day. Day value must be between 1 and 31.')
         return False
     if int(date_parts[3]) < 0 or int(date_parts[3]) > 23:
-        print('Invalid hour. Hour value must be between 0 and 23.')
+        print('\tInvalid hour. Hour value must be between 0 and 23.')
         return False
     if int(date_parts[4]) < 0 or int(date_parts[4]) > 59:
-        print('Invalid minute(s). Minute value must be between 0 and 59.')
+        print('\tInvalid minute(s). Minute value must be between 0 and 59.')
         return False
     return True
 
@@ -152,6 +153,12 @@ def datestring_to_readable_format(datestring):
         month = 'November'
     else:
         month = 'December'
+
+    if len(date_parts[3]) == 1:
+        date_parts[3] = '0' + date_parts[3]
+
+    if len(date_parts[4]) == 1:
+        date_parts[4] = '0' + date_parts[4]
 
     datestring_formatted += f'{date_parts[3]}:{date_parts[4]} {date_parts[2]} {month} {date_parts[0]}'
 
@@ -240,14 +247,16 @@ def parse_qparams(qparams):
                     offset = input('\tOffset (post number to start at): ')
                 print(f'You have chosen {offset} as your offset.\n')
             elif qp == 'b' or qp == 'before':
+                print('\tInput the desired date to search before.\n\t' \
+                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\n')
                 while not datestring_is_valid(before):
-                    before = input('\tInput the desired date to search before.\n\t' \
-                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\n\tYour entry: ')
+                    before = input('\tYour entry: ')
                 print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
             elif qp == 'a' or qp == 'after':
+                print('\tInput the desired date to search after.\n\t' \
+                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\n')
                 while not datestring_is_valid(after):
-                    after = input('\tInput the desired date to search after.\n' \
-                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\nYour entry: ')
+                    after = input('\tYour entry: ')
                 print(f'You have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
             elif qp == 'l' or qp == 'limit':
                 while not limit_is_valid(limit):
