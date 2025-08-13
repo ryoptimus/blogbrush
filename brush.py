@@ -11,13 +11,14 @@ from helpers import (
 load_dotenv()
 
 class Post:
-    def __init__(self, id, url, type, date, timestamp, summary, tags):
+    def __init__(self, id, url, type, date, timestamp, summary, reblog_key, tags):
         self.id = id
         self.url = url
         self.type = type
         self.date = date
         self.timestamp = timestamp
         self.summary = summary
+        self.reblog_key = reblog_key
         self.tags = tags
 
     def __repr__(self):
@@ -28,6 +29,7 @@ class Post:
             f"date='{self.date}',\n\t"
             f"timestamp={self.timestamp},\n\t"
             f"summary='{self.summary}',\n\t"
+            f"reblog_key='{self.reblog_key}',\n\t"
             f"tags={self.tags})"
         )
 
@@ -40,13 +42,13 @@ def form_request_url(blog_name, target):
     # Construct the API URL
     api_url = f'https://api.tumblr.com/v2/blog/{blog_name}.tumblr.com'
     if target.lower() == 'p' or target.lower() == 'posts':
-        print('You have chosen posts.')
+        print('You have chosen posts.\n')
         request_url = api_url + '/posts'
     elif target.lower() == 'l' or target.lower() == 'likes':
-        print('You have chosen likes.')
+        print('You have chosen likes.\n')
         request_url = api_url + f'/likes?api_key={consumer_key}'
     else:
-        print('You have chosen drafts.')
+        print('You have chosen drafts.\n')
         request_url = api_url + '/posts/draft'
 
     return request_url
@@ -61,8 +63,10 @@ def get_user_input():
 
     return blog_name, target, request_url, function, qparams
 
+# GET function for posts and drafts
 def get_posts(request_url, oauth):
-    # Get posts
+    # Get posts / drafts
+    print(f'Request URL: {request_url}')
     try:
         response = requests.get(request_url, auth=oauth)
         response.raise_for_status()
@@ -91,6 +95,7 @@ def read_posts(request_url, oauth):
             p['date'],
             p['timestamp'],
             p['summary'],
+            p['reblog_key'],
             p['tags']
         )
         posts.append(post)
@@ -136,6 +141,7 @@ def read_likes(request_url, oauth):
             p['date'],
             p['timestamp'],
             p['summary'],
+            p['reblog_key'],
             p['tags']
         )
         posts.append(post)
@@ -150,6 +156,53 @@ def read_likes(request_url, oauth):
 
     for post in posts:
         print(post)
+    
+def read_drafts(request_url, oauth):
+    data = get_posts(request_url, oauth)
+
+    # Create class instances for posts returned
+    posts = []
+    for p in data['response']['posts']:
+        post = Post(
+            p['id'],
+            p['post_url'],
+            p['type'],
+            p['date'],
+            p['timestamp'],
+            p['summary'],
+            p['reblog_key'],
+            p['tags']
+        )
+        posts.append(post)
+
+    print(f'{len(posts)} drafts acquired. Printing summaries...\n')
+
+    # Split at '/v2/blog/' to get the blog part first
+    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+
+    # Split at '.' to get the blog identifier
+    blog_id = blog_part.split('/')[0]
+    # print(blog_id)
+
+    for post in posts:
+        print(post)
+
+def unlike_posts(request_url, oauth):
+    data = get_likes(request_url, oauth)
+    posts = []
+    for p in data['response']['liked_posts']:
+        post = Post(
+            p['id'],
+            p['post_url'],
+            p['type'],
+            p['date'],
+            p['timestamp'],
+            p['summary'],
+            p['reblog_key'],
+            p['tags']
+        )
+        posts.append(post)
+    # TODO: Implement unlike functionality. Need reblog keys first tho
 
 def delete_posts(request_url, qparams, oauth):
     data = get_posts(request_url, oauth)
@@ -163,6 +216,7 @@ def delete_posts(request_url, qparams, oauth):
             p['date'],
             p['timestamp'],
             p['summary'],
+            p['reblog_key'],
             p['tags']
         )
         posts.append(post)
@@ -205,11 +259,15 @@ def run_session():
     )
 
     if function == 'r' or function == 'read':
-        print('You have chosen to read posts.')
         if target == 'p' or target == 'posts':
+            print('You have chosen to read posts.')
             read_posts(request_url, oauth)
         elif target == 'l' or target == 'likes':
+            print('You have chosen to read likes.')
             read_likes(request_url, oauth)
+        else:
+            # print('You have chosen to read drafts.')
+            read_drafts(request_url, oauth)
     elif function == 'd' or function == 'delete':
         print('You have chosen to delete posts.')
         delete_posts(request_url, qparams, oauth)
