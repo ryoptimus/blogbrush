@@ -87,11 +87,14 @@ def qparams_are_valid(qparams_chosen):
         return False
     
 def tag_is_valid(tag):
-    if not tag:
-        print('Tag cannot be blank. Please try again.')
+    # Default tag, don't print anything
+    if tag == 'mo,om':
+        return False
+    elif not tag:
+        print('\tTag cannot be blank. Please try again.')
         return False
     elif ',' in tag:
-        print('Tag cannot contain commas. Please try again.')
+        print('\tTag cannot contain commas. Please try again.')
         return False
     else: 
         return True
@@ -227,8 +230,9 @@ def parse_qparams(qparams):
                     type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
                 print(f'You have chosen {type} as your post type.\n')
             elif qp == 'h' or qp == 'hashtag':
+                tag = 'mo,om'
                 while not tag_is_valid(tag):
-                    tag = input('\tInput a valid tag. The tag may not include commas. ')
+                    tag = input('\tTag: ')
                 print(f'You have chosen {tag} as a tag for filtering.\n')
                 tag = format_tag(tag)
             elif qp == 'o' or qp == 'offset':
