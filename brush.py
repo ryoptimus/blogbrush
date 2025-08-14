@@ -100,7 +100,7 @@ def read_posts(request_url, oauth):
         )
         posts.append(post)
 
-    print(request_url)
+    # print(request_url)
     # Split at '/v2/blog/' to get the blog part first
     blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 

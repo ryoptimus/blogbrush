@@ -86,6 +86,14 @@ def qparams_are_valid(qparams_chosen):
         print('Error: Invalid parameters detected.\nPlease try again.')
         return False
     
+def tag_amount_is_valid(tag_amount):
+    if tag_amount == 'stringgg':
+        return False
+    if int(tag_amount) > 0 and int(tag_amount) <= 20:
+        return True
+    print('Tag amount must be between 1 and 20.')
+    return False
+    
 def tag_is_valid(tag):
     # Default tag, don't print anything
     if tag == 'mo,om':
@@ -216,7 +224,7 @@ def get_qparams(target):
 
 def parse_qparams(qparams):
     type = None
-    tag = None
+    tags = None
     offset = None
     before = None
     after = None
@@ -235,35 +243,44 @@ def parse_qparams(qparams):
                 type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
                 while type not in type_options:
                     type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
-                print(f'You have chosen {type} as your post type.\n')
+                print(f'\tYou have chosen {type} as your post type.\n')
             elif qp == 'h' or qp == 'hashtag':
-                tag = 'mo,om'
-                while not tag_is_valid(tag):
-                    tag = input('\tTag: ')
-                print(f'You have chosen {tag} as a tag for filtering.\n')
-                tag = format_tag(tag)
+                tag_amount = 'stringgg'
+                print('\tHow many tags would you like to specify?')
+                while not tag_amount_is_valid(tag_amount):
+                    tag_amount = input('\t\tAmount: ')
+                tag_amount = int(tag_amount)
+                print(f'\tYou have chosen to specify {tag_amount} tag(s). Input them below.')
+                tags = []
+                for i in range(tag_amount):
+                    tag = 'mo,om'
+                    while not tag_is_valid(tag):
+                        tag = input(f'\t\tTag {i + 1}: ')
+                    tag = format_tag(tag)
+                    tags.append(tag)
+                print(f"\tYou have selected the following tags: {', '.join(tags)}\n")
             elif qp == 'o' or qp == 'offset':
                 while not offset.isdigit():
                     offset = input('\tOffset (post number to start at): ')
-                print(f'You have chosen {offset} as your offset.\n')
+                print(f'\tYou have chosen {offset} as your offset.\n')
             elif qp == 'b' or qp == 'before':
                 print('\tInput the desired date to search before.\n\t' \
-                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\n')
+                    'Date must be entered in year-month-date-hour-minute format separated by spaces.')
                 while not datestring_is_valid(before):
                     before = input('\tYour entry: ')
                 print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
             elif qp == 'a' or qp == 'after':
                 print('\tInput the desired date to search after.\n\t' \
-                    'Date must be entered in year-month-date-hour-minute format separated by spaces.\n')
+                    'Date must be entered in year-month-date-hour-minute format separated by spaces.')
                 while not datestring_is_valid(after):
                     after = input('\tYour entry: ')
-                print(f'You have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
+                print(f'\tYou have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
             elif qp == 'l' or qp == 'limit':
                 while not limit_is_valid(limit):
                     limit = input('\tInput limit of posts to alter / read (1-20): ')
-                print(f'You have entered {limit} as your desired limit.\n')
+                print(f'\tYou have entered {limit} as your desired limit.\n')
 
-    return type, tag, offset, before, after, limit, none
+    return type, tags, offset, before, after, limit, none
 
 def convert_to_unix_time(datestring):
     if not datestring:
@@ -281,15 +298,26 @@ def convert_to_unix_time(datestring):
     return int(res)
 
 def append_qparams_to_url(request_url, qparams):
-    type, tag, offset, before, after, limit, none = parse_qparams(qparams)
+    type, tags, offset, before, after, limit, none = parse_qparams(qparams)
     if not none:
         if type:
             request_url = request_url + f'/{type.lower()}'
-        if tag:
-            if '?' in request_url:
-                request_url = request_url + f'&tag={tag}'
+        if tags:
+            if '?' not in request_url:
+                sep = '?'
             else:
-                request_url = request_url + f'?tag={tag}'
+                sep = '&'
+
+            # Step 2: Build each tag parameter with its index
+            tag_params = []
+            for i, tag in enumerate(tags):
+                tag_params.append(f'tag[{i}]={tag}')
+
+            # Step 3: Join all tag parameters with &
+            tag_query = '&'.join(tag_params)
+
+            # Step 4: Append to the request URL
+            request_url = request_url + sep + tag_query
         if offset:
             if '?' in request_url:
                 request_url = request_url + f'&offset={offset}'
