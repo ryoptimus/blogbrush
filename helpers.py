@@ -89,9 +89,9 @@ def qparams_are_valid(qparams_chosen):
 def tag_amount_is_valid(tag_amount):
     if tag_amount == 'stringgg':
         return False
-    if int(tag_amount) > 0 and int(tag_amount) <= 20:
+    if int(tag_amount) > 0 and int(tag_amount) < 5:
         return True
-    print('Tag amount must be between 1 and 20.')
+    print('Tag amount must be between 1 and 4.')
     return False
     
 def tag_is_valid(tag):
