@@ -66,7 +66,7 @@ def get_user_input():
 # GET function for posts and drafts
 def get_posts(request_url, oauth):
     # Get posts / drafts
-    print(f'Request URL: {request_url}')
+    # print(f'Request URL: {request_url}')
     try:
         response = requests.get(request_url, auth=oauth)
         response.raise_for_status()
@@ -206,24 +206,28 @@ def unlike_posts(request_url, oauth):
             p['tags']
         )
         posts.append(post)
-    # TODO: Implement unlike functionality. Need reblog keys first tho
+    
+    print(f'{len(posts)} like(s) acquired. Unliking...\n')
 
-    for post in posts:
-        # print(post)
-        unlike_url = f'https://api.tumblr.com/v2/user/unlike'
-        rparams = {
-            'id': post.id,
-            'reblog_key': post.reblog_key
-        }
+    if posts:
+        for post in posts:
+            # print(post)
+            unlike_url = f'https://api.tumblr.com/v2/user/unlike'
+            rparams = {
+                'id': post.id,
+                'reblog_key': post.reblog_key
+            }
 
-        try:
-            unlike_response = requests.post(unlike_url, auth=oauth, data=rparams)
-            unlike_response.raise_for_status()
-        except requests.exceptions.RequestException as error:
-            print(f"Error unliking post {post.id}: {error}")
-            continue
+            try:
+                unlike_response = requests.post(unlike_url, auth=oauth, data=rparams)
+                unlike_response.raise_for_status()
+            except requests.exceptions.RequestException as error:
+                print(f"Error unliking post {post.id}: {error}")
+                continue
 
-        print(f'Post {post.id} unliked successfully.\n(status: {unlike_response.json()['meta']['status']}, msg: {unlike_response.json()['meta']['msg']})')
+            print(f'Post {post.id} unliked successfully.\n(status: {unlike_response.json()['meta']['status']}, msg: {unlike_response.json()['meta']['msg']})\n')
+    else:
+        print('No likes found matching given parameters. 0 posts unliked.')
 
 def delete_posts(request_url, oauth):
     data = get_posts(request_url, oauth)
@@ -250,21 +254,26 @@ def delete_posts(request_url, oauth):
     blog_id = blog_part.split('/')[0]
     # print(blog_id)
 
-    for post in posts:
-        print(post)
-        delete_url = f'https://api.tumblr.com/v2/blog/{blog_id}/post/delete'
-        rparams = {
-            'id': post.id
-        }
+    if posts:
+        print(f'{len(posts)} post(s) acquired. Deleting...\n')
+        
+        for post in posts:
+            print(post)
+            delete_url = f'https://api.tumblr.com/v2/blog/{blog_id}/post/delete'
+            rparams = {
+                'id': post.id
+            }
 
-        try:
-            del_response = requests.post(delete_url, auth=oauth, data=rparams)
-            del_response.raise_for_status()
-        except requests.exceptions.RequestException as error:
-            print(f"Error deleting post {post.id}: {error}")
-            continue
+            try:
+                del_response = requests.post(delete_url, auth=oauth, data=rparams)
+                del_response.raise_for_status()
+            except requests.exceptions.RequestException as error:
+                print(f"Error deleting post {post.id}: {error}")
+                continue
 
-        print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})')
+            print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
+    else:
+        print('No posts found matching given parameters. 0 posts deleted.')
     
     # if not ('l' in qparams or 'limit' in qparams):
 

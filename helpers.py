@@ -258,7 +258,7 @@ def parse_qparams(qparams):
                         tag = input(f'\t\tTag {i + 1}: ')
                     tag = format_tag(tag)
                     tags.append(tag)
-                print(f"\tYou have selected the following tags: {', '.join(tags)}\n")
+                print(f"\tYou have selected the following tag(s): {', '.join(tags)}\n")
             elif qp == 'o' or qp == 'offset':
                 while not offset.isdigit():
                     offset = input('\tOffset (post number to start at): ')
@@ -308,15 +308,15 @@ def append_qparams_to_url(request_url, qparams):
             else:
                 sep = '&'
 
-            # Step 2: Build each tag parameter with its index
+            # Build each tag parameter with its index
             tag_params = []
             for i, tag in enumerate(tags):
                 tag_params.append(f'tag[{i}]={tag}')
 
-            # Step 3: Join all tag parameters with &
+            # Join all tag parameters with &
             tag_query = '&'.join(tag_params)
 
-            # Step 4: Append to the request URL
+            # Append to the request URL
             request_url = request_url + sep + tag_query
         if offset:
             if '?' in request_url:
