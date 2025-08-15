@@ -4,34 +4,14 @@ import json
 import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
+from post import Post
 from helpers import (
     get_blog_name, get_target, get_function, get_qparams, append_qparams_to_url
 )
 
 load_dotenv()
 
-class Post:
-    def __init__(self, id, url, type, date, timestamp, summary, reblog_key, tags):
-        self.id = id
-        self.url = url
-        self.type = type
-        self.date = date
-        self.timestamp = timestamp
-        self.summary = summary
-        self.reblog_key = reblog_key
-        self.tags = tags
 
-    def __repr__(self):
-        return (
-            f"Post(id={self.id},\n\t"
-            f"url='{self.url}',\n\t"
-            f"type='{self.type}',\n\t"
-            f"date='{self.date}',\n\t"
-            f"timestamp={self.timestamp},\n\t"
-            f"summary='{self.summary}',\n\t"
-            f"reblog_key='{self.reblog_key}',\n\t"
-            f"tags={self.tags})"
-        )
 
 consumer_key = os.getenv('CONSUMER_KEY')
 consumer_secret = os.getenv('CONSUMER_SECRET')
@@ -88,16 +68,7 @@ def read_posts(request_url, oauth):
 
     posts = []
     for p in data['response']['posts']:
-        post = Post(
-            p['id'],
-            p['post_url'],
-            p['type'],
-            p['date'],
-            p['timestamp'],
-            p['summary'],
-            p['reblog_key'],
-            p['tags']
-        )
+        post = Post.get_info(p)
         posts.append(post)
 
     # print(request_url)
@@ -136,16 +107,7 @@ def read_likes(request_url, oauth):
 
     posts = []
     for p in data['response']['liked_posts']:
-        post = Post(
-            p['id'],
-            p['post_url'],
-            p['type'],
-            p['date'],
-            p['timestamp'],
-            p['summary'],
-            p['reblog_key'],
-            p['tags']
-        )
+        post = Post.get_info(p)
         posts.append(post)
 
     print(f'Request URL: {request_url}')
@@ -167,16 +129,7 @@ def read_drafts(request_url, oauth):
     # Create class instances for posts returned
     posts = []
     for p in data['response']['posts']:
-        post = Post(
-            p['id'],
-            p['post_url'],
-            p['type'],
-            p['date'],
-            p['timestamp'],
-            p['summary'],
-            p['reblog_key'],
-            p['tags']
-        )
+        post = Post.get_info(p)
         posts.append(post)
 
     # Split at '/v2/blog/' to get the blog part first
@@ -195,16 +148,7 @@ def unlike_posts(request_url, oauth):
     data = get_likes(request_url, oauth)
     posts = []
     for p in data['response']['liked_posts']:
-        post = Post(
-            p['id'],
-            p['post_url'],
-            p['type'],
-            p['date'],
-            p['timestamp'],
-            p['summary'],
-            p['reblog_key'],
-            p['tags']
-        )
+        post = Post.get_info(p)
         posts.append(post)
     
     print(f'{len(posts)} like(s) acquired. Unliking...\n')
@@ -234,16 +178,7 @@ def delete_posts(request_url, oauth):
 
     posts = []
     for p in data['response']['posts']:
-        post = Post(
-            p['id'],
-            p['post_url'],
-            p['type'],
-            p['date'],
-            p['timestamp'],
-            p['summary'],
-            p['reblog_key'],
-            p['tags']
-        )
+        post = Post.get_info(p)
         posts.append(post)
 
     print(f'Request URL: {request_url}')
