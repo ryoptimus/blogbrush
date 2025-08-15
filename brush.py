@@ -11,8 +11,6 @@ from helpers import (
 
 load_dotenv()
 
-
-
 consumer_key = os.getenv('CONSUMER_KEY')
 consumer_secret = os.getenv('CONSUMER_SECRET')
 token = os.getenv('TOKEN')
