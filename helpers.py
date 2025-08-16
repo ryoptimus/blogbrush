@@ -20,6 +20,9 @@ def get_blog_name():
 
     return blog_name
 
+def craft_blog_id(blog_name):
+    return blog_name + '.tumblr.com'
+
 def get_target():
     target = 'x'
     targets = ['p', 'posts',
@@ -163,8 +166,15 @@ def get_tags():
     print(f"\tYou have selected the following tag(s): {', '.join(tags)}\n")
     return tags
 
+def get_offset(offset):
+    while not offset.isdigit():
+        offset = input('\tOffset (post number to start at): ')
+    print(f'\tYou have chosen {offset} as your offset.\n')
+    return offset
+
 def get_searchdate(date_qp):
-    if date_qp == 'before':
+    if date_qp == 'b' or date_qp == 'before':
+        before = None
         print('\tInput the desired date to search before.\n\t' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.')
         while not datestring_is_valid(before):
@@ -172,6 +182,7 @@ def get_searchdate(date_qp):
         print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
         return before
     else:
+        after = None
         print('\tInput the desired date to search after.\n\t' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.')
         while not datestring_is_valid(after):
@@ -179,7 +190,7 @@ def get_searchdate(date_qp):
         print(f'\tYou have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
         return after
     
-def get_limit():
+def get_limit(limit):
     while not limit_is_valid(limit):
         limit = input('\tInput limit of posts to alter / read (1-20): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
@@ -206,15 +217,13 @@ def parse_qparams(qparams):
             elif qp == 'h' or qp == 'hashtag':
                 tags = get_tags()
             elif qp == 'o' or qp == 'offset':
-                while not offset.isdigit():
-                    offset = input('\tOffset (post number to start at): ')
-                print(f'\tYou have chosen {offset} as your offset.\n')
+                offset = get_offset(offset)
             elif qp == 'b' or qp == 'before':
-                before = get_searchdate('before')
+                before = get_searchdate(qp)
             elif qp == 'a' or qp == 'after':
-                after = get_searchdate('after')
+                after = get_searchdate(qp)
             elif qp == 'l' or qp == 'limit':
-                limit = get_limit()
+                limit = get_limit(limit)
 
     return type, tags, offset, before, after, limit, none
 

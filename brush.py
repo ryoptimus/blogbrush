@@ -4,9 +4,10 @@ import json
 import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
+from session import Session
 from post import Post
 from helpers import (
-    get_blog_name, get_target, get_function, get_qparams, append_qparams_to_url
+    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url
 )
 
 load_dotenv()
@@ -37,16 +38,18 @@ def get_user_input():
     request_url = form_request_url(blog_name, target)
     function = get_function(target)
     qparams = get_qparams(target)
-    request_url = append_qparams_to_url(request_url, qparams)
 
     return blog_name, target, request_url, function, qparams
 
+def parse_user_input(qparams, session):
+    session.request_url = append_qparams_to_url(session.request_url, qparams)
+
 # GET function for posts and drafts
-def get_posts(request_url, oauth):
+def get_posts(session):
     # Get posts / drafts
     # print(f'Request URL: {request_url}')
     try:
-        response = requests.get(request_url, auth=oauth)
+        response = requests.get(session.request_url, auth=session.oauth)
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
@@ -61,8 +64,8 @@ def get_posts(request_url, oauth):
         print(f"Error parsing JSON: {error}")
         return
 
-def read_posts(request_url, oauth):
-    data = get_posts(request_url, oauth)
+def read_posts(session):
+    data = get_posts(session)
 
     posts = []
     for p in data['response']['posts']:
@@ -71,7 +74,7 @@ def read_posts(request_url, oauth):
 
     # print(request_url)
     # Split at '/v2/blog/' to get the blog part first
-    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
@@ -82,10 +85,10 @@ def read_posts(request_url, oauth):
     for post in posts:
         print(post)
 
-def get_likes(request_url, oauth):
+def get_likes(session):
     # Get likes
     try:
-        response = requests.get(request_url, auth=oauth)
+        response = requests.get(session.request_url, auth=session.oauth)
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
@@ -100,17 +103,17 @@ def get_likes(request_url, oauth):
         print(f"Error parsing JSON: {error}")
         return
 
-def read_likes(request_url, oauth):
-    data = get_likes(request_url, oauth)
+def read_likes(session):
+    data = get_likes(session)
 
     posts = []
     for p in data['response']['liked_posts']:
         post = Post.get_info(p)
         posts.append(post)
 
-    print(f'Request URL: {request_url}')
+    print(f'Request URL: {session.request_url}')
     # Split at '/v2/blog/' to get the blog part first
-    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
@@ -121,8 +124,8 @@ def read_likes(request_url, oauth):
     for post in posts:
         print(post)
     
-def read_drafts(request_url, oauth):
-    data = get_posts(request_url, oauth)
+def read_drafts(session):
+    data = get_posts(session)
 
     # Create class instances for posts returned
     posts = []
@@ -131,7 +134,7 @@ def read_drafts(request_url, oauth):
         posts.append(post)
 
     # Split at '/v2/blog/' to get the blog part first
-    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
@@ -142,8 +145,8 @@ def read_drafts(request_url, oauth):
     for post in posts:
         print(post)
 
-def unlike_posts(request_url, oauth):
-    data = get_likes(request_url, oauth)
+def unlike_posts(session):
+    data = get_likes(session)
     posts = []
     for p in data['response']['liked_posts']:
         post = Post.get_info(p)
@@ -161,7 +164,7 @@ def unlike_posts(request_url, oauth):
             }
 
             try:
-                unlike_response = requests.post(unlike_url, auth=oauth, data=rparams)
+                unlike_response = requests.post(unlike_url, auth=session.oauth, data=rparams)
                 unlike_response.raise_for_status()
             except requests.exceptions.RequestException as error:
                 print(f"Error unliking post {post.id}: {error}")
@@ -171,17 +174,17 @@ def unlike_posts(request_url, oauth):
     else:
         print('No likes found matching given parameters. 0 posts unliked.')
 
-def delete_posts(request_url, oauth):
-    data = get_posts(request_url, oauth)
+def delete_posts(session):
+    data = get_posts(session)
 
     posts = []
     for p in data['response']['posts']:
         post = Post.get_info(p)
         posts.append(post)
 
-    print(f'Request URL: {request_url}')
+    print(f'Request URL: {session.request_url}')
     # Split at '/v2/blog/' to get the blog part first
-    blog_part = request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
+    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
@@ -198,7 +201,7 @@ def delete_posts(request_url, oauth):
             }
 
             try:
-                del_response = requests.post(delete_url, auth=oauth, data=rparams)
+                del_response = requests.post(delete_url, auth=session.oauth, data=rparams)
                 del_response.raise_for_status()
             except requests.exceptions.RequestException as error:
                 print(f"Error deleting post {post.id}: {error}")
@@ -212,6 +215,7 @@ def delete_posts(request_url, oauth):
 
 def run_session():
     blog_name, target, request_url, function, qparams = get_user_input()
+    blog_identifier = craft_blog_id(blog_name)
 
     # Create OAuth1 session
     oauth = OAuth1(
@@ -221,22 +225,31 @@ def run_session():
         token_secret
     )
 
+    session = Session(
+        blog_identifier = blog_identifier,
+        request_url = request_url,
+        oauth = oauth,
+        target = target
+    )
+
+    parse_user_input(qparams, session)
+
     if function == 'r' or function == 'read':
         if target == 'p' or target == 'posts':
             print('You have chosen to read posts.')
-            read_posts(request_url, oauth)
+            read_posts(session)
         elif target == 'l' or target == 'likes':
             print('You have chosen to read likes.')
-            read_likes(request_url, oauth)
+            read_likes(session)
         else:
             # print('You have chosen to read drafts.')
-            read_drafts(request_url, oauth)
+            read_drafts(session)
     elif function == 'd' or function == 'delete':
         print('You have chosen to delete posts.')
-        delete_posts(request_url, oauth)
+        delete_posts(session)
     elif function == 'u' or function == 'unlike':
         print('You have chosen to unlike posts.')
-        unlike_posts(request_url, oauth)
+        unlike_posts(session)
     else:
         print('You have chosen to edit posts.')
 
