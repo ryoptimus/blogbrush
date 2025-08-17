@@ -42,7 +42,7 @@ def get_user_input():
     return blog_name, target, request_url, function, qparams
 
 def parse_user_input(qparams, session):
-    session.request_url = append_qparams_to_url(session.request_url, qparams)
+    append_qparams_to_url(session, qparams)
 
 # GET function for posts and drafts
 def get_posts(session):

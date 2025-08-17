@@ -141,15 +141,15 @@ def get_qparams(target):
     qparams = list(qparams)
     return qparams
 
-def get_type():
+def get_type(session):
     type = 'subtweet'
     type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
     while type not in type_options:
         type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
     print(f'\tYou have chosen {type} as your post type.\n')
-    return type
+    session.set_type(type)
 
-def get_tags():
+def get_tags(session):
     tag_amount = 'stringgg'
     print('\tHow many tags would you like to specify?')
     while not tag_amount_is_valid(tag_amount):
@@ -164,68 +164,14 @@ def get_tags():
         tag = format_tag(tag)
         tags.append(tag)
     print(f"\tYou have selected the following tag(s): {', '.join(tags)}\n")
-    return tags
+    session.set_tags(tags)
 
-def get_offset(offset):
-    while not offset.isdigit():
+def get_offset(session):
+    offset = None
+    while offset is None or not offset.isdigit():
         offset = input('\tOffset (post number to start at): ')
     print(f'\tYou have chosen {offset} as your offset.\n')
-    return offset
-
-def get_searchdate(date_qp):
-    if date_qp == 'b' or date_qp == 'before':
-        before = None
-        print('\tInput the desired date to search before.\n\t' \
-                'Date must be entered in year-month-date-hour-minute format separated by spaces.')
-        while not datestring_is_valid(before):
-            before = input('\tYour entry: ')
-        print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
-        return before
-    else:
-        after = None
-        print('\tInput the desired date to search after.\n\t' \
-                'Date must be entered in year-month-date-hour-minute format separated by spaces.')
-        while not datestring_is_valid(after):
-            after = input('\tYour entry: ')
-        print(f'\tYou have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
-        return after
-    
-def get_limit(limit):
-    while not limit_is_valid(limit):
-        limit = input('\tInput limit of posts to alter / read (1-20): ')
-    print(f'\tYou have entered {limit} as your desired limit.\n')
-    return limit
-
-def parse_qparams(qparams):
-    type = None
-    tags = None
-    offset = None
-    before = None
-    after = None
-    limit = None
-    none = None
-
-    if 'n' in qparams or 'none' in qparams:
-        print('You have no query parameters to set. Cool.')
-        none = True
-    else:
-        print('\nPlease provide values for your chosen query parameters.\n' \
-              'If an invalid value is provided, you will be prompted to input the value again.\n')
-        for qp in qparams:
-            if qp == 't' or qp == 'type':
-                type = get_type()
-            elif qp == 'h' or qp == 'hashtag':
-                tags = get_tags()
-            elif qp == 'o' or qp == 'offset':
-                offset = get_offset(offset)
-            elif qp == 'b' or qp == 'before':
-                before = get_searchdate(qp)
-            elif qp == 'a' or qp == 'after':
-                after = get_searchdate(qp)
-            elif qp == 'l' or qp == 'limit':
-                limit = get_limit(limit)
-
-    return type, tags, offset, before, after, limit, none
+    session.set_offset(offset)
 
 def convert_to_unix_time(datestring):
     if not datestring:
@@ -242,11 +188,64 @@ def convert_to_unix_time(datestring):
     res = dt.timestamp()
     return int(res)
 
-def append_qparams_to_url(request_url, qparams):
-    type, tags, offset, before, after, limit, none = parse_qparams(qparams)
+def get_searchdate(session, date_qp):
+    if date_qp == 'b' or date_qp == 'before':
+        before = None
+        print('\tInput the desired date to search before.\n\t' \
+                'Date must be entered in year-month-date-hour-minute format separated by spaces.')
+        while not datestring_is_valid(before):
+            before = input('\tYour entry: ')
+        print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
+        session.set_before(convert_to_unix_time(before))
+    else:
+        after = None
+        print('\tInput the desired date to search after.\n\t' \
+                'Date must be entered in year-month-date-hour-minute format separated by spaces.')
+        while not datestring_is_valid(after):
+            after = input('\tYour entry: ')
+        print(f'\tYou have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
+        session.set_after(convert_to_unix_time(after))
+    
+def get_limit(session):
+    limit = None
+    while not limit_is_valid(limit):
+        limit = input('\tInput limit of posts to alter / read (1-20): ')
+    print(f'\tYou have entered {limit} as your desired limit.\n')
+    session.set_limit(limit)
+
+def parse_qparams(session, qparams):
+    none = None
+
+    if 'n' in qparams or 'none' in qparams:
+        print('You have no query parameters to set. Cool.')
+        none = True
+    else:
+        print('\nPlease provide values for your chosen query parameters.\n' \
+              'If an invalid value is provided, you will be prompted to input the value again.\n')
+        for qp in qparams:
+            if qp == 't' or qp == 'type':
+                get_type(session)
+            elif qp == 'h' or qp == 'hashtag':
+                get_tags(session)
+            elif qp == 'o' or qp == 'offset':
+                get_offset(session)
+            elif qp == 'b' or qp == 'before':
+                get_searchdate(session, qp)
+            elif qp == 'a' or qp == 'after':
+                get_searchdate(session, qp)
+            elif qp == 'l' or qp == 'limit':
+                get_limit(session)
+
+    return none
+
+def append_qparams_to_url(session, qparams):
+    none = parse_qparams(session, qparams)
+    request_url = session.request_url
     if not none:
+        type = session.get_type()
         if type:
-            request_url = request_url + f'/{type.lower()}'
+            request_url += f'/{type.lower()}'
+        tags = session.get_tags()
         if tags:
             if '?' not in request_url:
                 sep = '?'
@@ -263,27 +262,29 @@ def append_qparams_to_url(request_url, qparams):
 
             # Append to the request URL
             request_url = request_url + sep + tag_query
+        offset = session.get_offset()
         if offset:
             if '?' in request_url:
-                request_url = request_url + f'&offset={offset}'
+                request_url += f'&offset={offset}'
             else:
-                request_url = request_url + f'?offset={offset}'
+                request_url += f'?offset={offset}'
+        before = session.get_before()
         if before:
-            before_unix = convert_to_unix_time(before)
             if '?' in request_url:
-                request_url = request_url + f'&before={before_unix}'
+                request_url += f'&before={before}'
             else:
-                request_url = request_url + f'?before={before_unix}'
+                request_url += f'?before={before}'
+        after = session.get_after()
         if after:
-            after_unix = convert_to_unix_time(after)
             if '?' in request_url:
-                request_url = request_url + f'&after={after_unix}'
+                request_url += f'&after={after}'
             else:
-                request_url = request_url + f'?after={after_unix}'
+                request_url += f'?after={after}'
+        limit = session.get_limit()
         if limit:
             if '?' in request_url:
-                request_url = request_url + f'&limit={limit}'
+                request_url += f'&limit={limit}'
             else:
-                request_url = request_url + f'?limit={limit}'
+                request_url += f'?limit={limit}'
 
-    return request_url
+    session.request_url = request_url

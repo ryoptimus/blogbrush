@@ -13,7 +13,6 @@ class Session:
     target: str = 'posts'   # Set a default
     params: Dict[str, object] = field(default_factory=dict)
 
-
     def set_limit(self, limit: int):
         self.params['limit'] = limit
         return self
@@ -34,9 +33,48 @@ class Session:
         self.params['tags'] = tags
         return self
     
+    def set_offset(self, offset: int):
+        self.params['offset'] = offset
+        return self
+    
     def get_limit(self):
         limit = self.params.get('limit')
         if limit:
             return int(limit)
+        else:
+            return None
+        
+    def get_before(self):
+        before = self.params.get('before')
+        if before:
+            return before
+        else:
+            return None
+    
+    def get_after(self):
+        after = self.params.get('after')
+        if after:
+            return after
+        else:
+            return None
+    
+    def get_type(self):
+        type = self.params.get('type')
+        if type:
+            return type
+        else:
+            return None
+    
+    def get_tags(self):
+        tags = self.params.get('tags')
+        if tags:
+            return tags
+        else:
+            return None
+        
+    def get_offset(self):
+        offset = self.params.get('offset')
+        if offset:
+            return offset
         else:
             return None
