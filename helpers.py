@@ -36,6 +36,13 @@ def get_target():
         'For drafts, type d or drafts.\n\n\t' \
         'Selection: ')
 
+    if target.lower() == 'p' or target.lower() == 'posts':
+        print('You have selected posts.\n')
+    elif target.lower() == 'l' or target.lower() == 'drafts':
+        print('You have selected drafts.\n')
+    else:
+        print('You have selected drafts.\n')
+
     return target
 
 def get_function(target):
@@ -55,11 +62,21 @@ def get_function(target):
         'Selection: '
     else:
         # IDK what else you can do with drafts and idrc rn
+        print('Default functionality for drafts is read. Hope you brought your spectacles.\n')
         return 'r'
     
     while function.lower() not in functions:
         function = input(prompt_string)
     
+    if function.lower() == 'r' or function.lower == 'read':
+        print('You have chosen the read function.\n')
+    elif function.lower() == 'd' or function.lower == 'delete':
+        print('You have chosen the delete function.\n')
+    elif function.lower() == 'e' or function.lower == 'edit':
+        print('You have chosen the edit function.\n')
+    else:
+        print('You have chosen the edit function.\n')
+
     return function
 
 def datestring_to_readable_format(datestring):
@@ -217,7 +234,7 @@ def parse_qparams(session, qparams):
     none = None
 
     if 'n' in qparams or 'none' in qparams:
-        print('You have no query parameters to set. Cool.')
+        print('You have no query parameters to set. Cool.\n')
         none = True
     else:
         print('\nPlease provide values for your chosen query parameters.\n' \

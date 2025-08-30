@@ -233,22 +233,22 @@ def run_session():
 
     if function == 'r' or function == 'read':
         if target == 'p' or target == 'posts':
-            print('You have chosen to read posts.')
+            print('You have chosen to read posts.\n')
             read_posts(session)
         elif target == 'l' or target == 'likes':
-            print('You have chosen to read likes.')
+            print('You have chosen to read likes.\n')
             read_likes(session)
         else:
             # print('You have chosen to read drafts.')
             read_drafts(session)
     elif function == 'd' or function == 'delete':
-        print('You have chosen to delete posts.')
+        print('You have chosen to delete posts.\n')
         delete_posts(session)
     elif function == 'u' or function == 'unlike':
-        print('You have chosen to unlike posts.')
+        print('You have chosen to unlike posts.\n')
         unlike_posts(session)
     else:
-        print('You have chosen to edit posts.')
+        print('You have chosen to edit posts.\n')
 
 if __name__ == "__main__":
     run_session()
