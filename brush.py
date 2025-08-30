@@ -17,17 +17,14 @@ consumer_secret = os.getenv('CONSUMER_SECRET')
 token = os.getenv('TOKEN')
 token_secret = os.getenv('TOKEN_SECRET')
 
-def form_request_url(blog_name, target):
+def form_request_url(blog_name, target, function):
     # Construct the API URL
     api_url = f'https://api.tumblr.com/v2/blog/{blog_name}.tumblr.com'
     if target.lower() == 'p' or target.lower() == 'posts':
-        print('You have chosen posts.\n')
         request_url = api_url + '/posts'
     elif target.lower() == 'l' or target.lower() == 'likes':
-        print('You have chosen likes.\n')
         request_url = api_url + f'/likes?api_key={consumer_key}'
     else:
-        print('You have chosen drafts.\n')
         request_url = api_url + '/posts/draft'
 
     return request_url
@@ -35,11 +32,10 @@ def form_request_url(blog_name, target):
 def get_user_input():
     blog_name = get_blog_name()
     target = get_target()
-    request_url = form_request_url(blog_name, target)
     function = get_function(target)
     qparams = get_qparams(target)
 
-    return blog_name, target, request_url, function, qparams
+    return blog_name, target, function, qparams
 
 def parse_user_input(qparams, session):
     append_qparams_to_url(session, qparams)
@@ -214,7 +210,8 @@ def delete_posts(session):
     # if not ('l' in qparams or 'limit' in qparams):
 
 def run_session():
-    blog_name, target, request_url, function, qparams = get_user_input()
+    blog_name, target, function, qparams = get_user_input()
+    request_url = form_request_url(blog_name, target, function)
     blog_identifier = craft_blog_id(blog_name)
 
     # Create OAuth1 session
