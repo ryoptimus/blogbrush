@@ -78,7 +78,7 @@ def read_posts(session):
 
     # Split at '.' to get the blog identifier
     blog_id = blog_part.split('/')[0]
-    print(blog_id)
+    # print(blog_id)
 
     print(f'{len(posts)} post(s) acquired. Printing summaries...\n')
 

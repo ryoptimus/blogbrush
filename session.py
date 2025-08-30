@@ -37,44 +37,9 @@ class Session:
         self.params['offset'] = offset
         return self
     
-    def get_limit(self):
-        limit = self.params.get('limit')
-        if limit:
-            return int(limit)
-        else:
-            return None
-        
-    def get_before(self):
-        before = self.params.get('before')
-        if before:
-            return before
-        else:
-            return None
-    
-    def get_after(self):
-        after = self.params.get('after')
-        if after:
-            return after
-        else:
-            return None
-    
-    def get_type(self):
-        type = self.params.get('type')
-        if type:
-            return type
-        else:
-            return None
-    
-    def get_tags(self):
-        tags = self.params.get('tags')
-        if tags:
-            return tags
-        else:
-            return None
-        
-    def get_offset(self):
-        offset = self.params.get('offset')
-        if offset:
-            return offset
+    def get_param(self, param_name: str):
+        param = self.params.get(param_name)
+        if param:
+            return param
         else:
             return None

@@ -195,7 +195,7 @@ def get_searchdate(session, date_qp):
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.')
         while not datestring_is_valid(before):
             before = input('\tYour entry: ')
-        print(f'You have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
+        print(f'\tYou have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
         session.set_before(convert_to_unix_time(before))
     else:
         after = None
@@ -242,10 +242,10 @@ def append_qparams_to_url(session, qparams):
     none = parse_qparams(session, qparams)
     request_url = session.request_url
     if not none:
-        type = session.get_type()
+        type = session.get_param('type')
         if type:
             request_url += f'/{type.lower()}'
-        tags = session.get_tags()
+        tags = session.get_param('tags')
         if tags:
             if '?' not in request_url:
                 sep = '?'
@@ -262,25 +262,25 @@ def append_qparams_to_url(session, qparams):
 
             # Append to the request URL
             request_url = request_url + sep + tag_query
-        offset = session.get_offset()
+        offset = session.get_param('offset')
         if offset:
             if '?' in request_url:
                 request_url += f'&offset={offset}'
             else:
                 request_url += f'?offset={offset}'
-        before = session.get_before()
+        before = session.get_param('before')
         if before:
             if '?' in request_url:
                 request_url += f'&before={before}'
             else:
                 request_url += f'?before={before}'
-        after = session.get_after()
+        after = session.get_param('after')
         if after:
             if '?' in request_url:
                 request_url += f'&after={after}'
             else:
                 request_url += f'?after={after}'
-        limit = session.get_limit()
+        limit = session.get_param('limit')
         if limit:
             if '?' in request_url:
                 request_url += f'&limit={limit}'
