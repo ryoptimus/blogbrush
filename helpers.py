@@ -1,3 +1,4 @@
+import re
 import datetime
 
 from validator import (
@@ -226,7 +227,7 @@ def get_searchdate(session, date_qp):
 def get_limit(session):
     limit = None
     while not limit_is_valid(limit):
-        limit = input('\tInput limit of posts to alter / read (1-20): ')
+        limit = input('\tInput limit of posts to alter / read (1-50): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
     session.set_limit(int(limit))
 
@@ -255,15 +256,16 @@ def parse_qparams(session, qparams):
 
     return none
 
-def append_type_to_url(session):
+def append_type_to_url(session, type):
+    # Also only works if the type has not been added yet
     request_url = session.request_url
-    type = session.get_param('type')
     request_url += f'/{type.lower()}'
     session.request_url = request_url
 
-def append_tags_to_url(session):
+def append_tags_to_url(session, tags):
+    # This one only works if the tags have not been added yet
     request_url = session.request_url
-    tags = session.get_param('tags')
+
     if '?' not in request_url:
         sep = '?'
     else:
@@ -281,14 +283,24 @@ def append_tags_to_url(session):
     request_url = request_url + sep + tag_query
     session.request_url = request_url
 
-def append_param_to_url(session, param_name):
+def append_param_to_url(session, param_name, param):
     request_url = session.request_url
-    param = session.get_param(param_name)
 
-    if '?' in request_url:
-        request_url += f'&{param_name}={param}'
+    if f'{param_name}=' in request_url:
+        base, query = request_url.split("?", 1)
+        parts = query.split("&")
+
+        for i, p in enumerate(parts):
+            if p.startswith(f'{param}='):
+                parts[i] = f'{param}={param}'
+                break
+
+        request_url = base + "?" + "&".join(parts)
     else:
-        request_url += f'?{param_name}={param}'
+        if '?' in request_url:
+            request_url += f'&{param_name}={param}'
+        else:
+            request_url += f'?{param_name}={param}'
 
     session.request_url = request_url
 
@@ -297,19 +309,19 @@ def append_qparams_to_url(session, qparams):
     if not none:
         type = session.get_param('type')
         if type:
-            append_type_to_url(session)
+            append_type_to_url(session, type)
         tags = session.get_param('tags')
         if tags:
-            append_tags_to_url(session)
+            append_tags_to_url(session, tags)
         offset = session.get_param('offset')
         if offset:
-            append_param_to_url(session, 'offset')
+            append_param_to_url(session, 'offset', offset)
         before = session.get_param('before')
         if before:
-            append_param_to_url(session, 'before')
+            append_param_to_url(session, 'before', before)
         after = session.get_param('after')
         if after:
-            append_param_to_url(session, 'after')
+            append_param_to_url(session, 'after', after)
         limit = session.get_param('limit')
         if limit:
-            append_param_to_url(session, 'limit')
+            append_param_to_url(session, 'limit', limit)

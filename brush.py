@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from session import Session
 from post import Post
 from helpers import (
-    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url
+    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_param_to_url, append_qparams_to_url
 )
 
 load_dotenv()
@@ -68,22 +68,32 @@ def read_posts(session):
         post = Post.get_info(p)
         posts.append(post)
 
-    # TODO: Check limit. If limit > 20, run get_posts again, but change / add the request 'before' parameter
-    # based on what the last post was
-
-    # How to edit the URL?
-
     limit = session.get_param('limit')
     if limit and limit > 20:
         print('Greedy. Want more posts, do you?\n')
         remaining_count = limit - 20
         last_post = posts[-1]
+        print(f'Timestamp of last post: {last_post.timestamp}')
         while remaining_count > 0:
-            if remaining_count != 20:
+            if remaining_count > 20:
                 # Figure out how to do this.... make a change_limit function?
                 # OR break up the append_qparams_to_url function
                 # Make a separate file for url construction (url_constructor.py?)
-                print('Remaining count is less than 20.\n')
+                append_param_to_url(session, 'limit', 20)
+                data = get_posts(session)
+                for p in data['response']['posts']:
+                    post = Post.get_info(p)
+                    posts.append(post)
+
+                remaining_count -= 20
+            else:
+                append_param_to_url(session, 'limit', remaining_count)
+                data = get_posts(session)
+                for p in data['response']['posts']:
+                    post = Post.get_info(p)
+                    posts.append(post)
+
+                remaining_count = 0
 
     # print(request_url)
     # Split at '/v2/blog/' to get the blog part first
