@@ -17,9 +17,9 @@ consumer_secret = os.getenv('CONSUMER_SECRET')
 token = os.getenv('TOKEN')
 token_secret = os.getenv('TOKEN_SECRET')
 
-def form_request_url(blog_name, target, function):
+def form_request_url(blog_identifier, target):
     # Construct the API URL
-    api_url = f'https://api.tumblr.com/v2/blog/{blog_name}.tumblr.com'
+    api_url = f'https://api.tumblr.com/v2/blog/{blog_identifier}'
     if target.lower() == 'p' or target.lower() == 'posts':
         request_url = api_url + '/posts'
     elif target.lower() == 'l' or target.lower() == 'likes':
@@ -67,6 +67,23 @@ def read_posts(session):
     for p in data['response']['posts']:
         post = Post.get_info(p)
         posts.append(post)
+
+    # TODO: Check limit. If limit > 20, run get_posts again, but change / add the request 'before' parameter
+    # based on what the last post was
+
+    # How to edit the URL?
+
+    limit = session.get_param('limit')
+    if limit and limit > 20:
+        print('Greedy. Want more posts, do you?\n')
+        remaining_count = limit - 20
+        last_post = posts[-1]
+        while remaining_count > 0:
+            if remaining_count != 20:
+                # Figure out how to do this.... make a change_limit function?
+                # OR break up the append_qparams_to_url function
+                # Make a separate file for url construction (url_constructor.py?)
+                print('Remaining count is less than 20.\n')
 
     # print(request_url)
     # Split at '/v2/blog/' to get the blog part first
@@ -211,8 +228,9 @@ def delete_posts(session):
 
 def run_session():
     blog_name, target, function, qparams = get_user_input()
-    request_url = form_request_url(blog_name, target, function)
     blog_identifier = craft_blog_id(blog_name)
+    request_url = form_request_url(blog_identifier, target)
+    
 
     # Create OAuth1 session
     oauth = OAuth1(

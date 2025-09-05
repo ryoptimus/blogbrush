@@ -228,7 +228,7 @@ def get_limit(session):
     while not limit_is_valid(limit):
         limit = input('\tInput limit of posts to alter / read (1-20): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
-    session.set_limit(limit)
+    session.set_limit(int(limit))
 
 def parse_qparams(session, qparams):
     none = None
@@ -255,53 +255,61 @@ def parse_qparams(session, qparams):
 
     return none
 
+def append_type_to_url(session):
+    request_url = session.request_url
+    type = session.get_param('type')
+    request_url += f'/{type.lower()}'
+    session.request_url = request_url
+
+def append_tags_to_url(session):
+    request_url = session.request_url
+    tags = session.get_param('tags')
+    if '?' not in request_url:
+        sep = '?'
+    else:
+        sep = '&'
+
+    # Build each tag parameter with its index
+    tag_params = []
+    for i, tag in enumerate(tags):
+        tag_params.append(f'tag[{i}]={tag}')
+
+    # Join all tag parameters with &
+    tag_query = '&'.join(tag_params)
+
+    # Append to the request URL
+    request_url = request_url + sep + tag_query
+    session.request_url = request_url
+
+def append_param_to_url(session, param_name):
+    request_url = session.request_url
+    param = session.get_param(param_name)
+
+    if '?' in request_url:
+        request_url += f'&{param_name}={param}'
+    else:
+        request_url += f'?{param_name}={param}'
+
+    session.request_url = request_url
+
 def append_qparams_to_url(session, qparams):
     none = parse_qparams(session, qparams)
-    request_url = session.request_url
     if not none:
         type = session.get_param('type')
         if type:
-            request_url += f'/{type.lower()}'
+            append_type_to_url(session)
         tags = session.get_param('tags')
         if tags:
-            if '?' not in request_url:
-                sep = '?'
-            else:
-                sep = '&'
-
-            # Build each tag parameter with its index
-            tag_params = []
-            for i, tag in enumerate(tags):
-                tag_params.append(f'tag[{i}]={tag}')
-
-            # Join all tag parameters with &
-            tag_query = '&'.join(tag_params)
-
-            # Append to the request URL
-            request_url = request_url + sep + tag_query
+            append_tags_to_url(session)
         offset = session.get_param('offset')
         if offset:
-            if '?' in request_url:
-                request_url += f'&offset={offset}'
-            else:
-                request_url += f'?offset={offset}'
+            append_param_to_url(session, 'offset')
         before = session.get_param('before')
         if before:
-            if '?' in request_url:
-                request_url += f'&before={before}'
-            else:
-                request_url += f'?before={before}'
+            append_param_to_url(session, 'before')
         after = session.get_param('after')
         if after:
-            if '?' in request_url:
-                request_url += f'&after={after}'
-            else:
-                request_url += f'?after={after}'
+            append_param_to_url(session, 'after')
         limit = session.get_param('limit')
         if limit:
-            if '?' in request_url:
-                request_url += f'&limit={limit}'
-            else:
-                request_url += f'?limit={limit}'
-
-    session.request_url = request_url
+            append_param_to_url(session, 'limit')
