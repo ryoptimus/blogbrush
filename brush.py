@@ -64,36 +64,47 @@ def gather_posts(session):
     data = query_posts_get(session)
 
     posts = []
+    seen_ids = set()
     for p in data['response']['posts']:
         post = Post.get_info(p)
-        posts.append(post)
+        if post.id not in seen_ids:
+            posts.append(post)
+            seen_ids.add(post.id)
 
     limit = session.get_param('limit')
     if limit and limit > 20:
         print('[gather_posts] Greedy. Want more posts, do you?\n')
         remaining_count = limit - 20
         print(f'[gather_posts] Looks like... {remaining_count} more, hm?')
-        last_post = posts[-1]
         while remaining_count > 0:
+            last_post = posts[-1]
+            append_param_to_url(session, 'before', last_post.timestamp)
             if remaining_count > 20:
                 append_param_to_url(session, 'limit', 20)
-                append_param_to_url(session, 'before', last_post.timestamp)
                 data = query_posts_get(session)
+                print(f'[gather_posts] len(data) returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
-                    posts.append(post)
-
-                remaining_count -= 20
+                    if post.id not in seen_ids:
+                        posts.append(post)
+                        seen_ids.add(post.id)
+                if len(data['response']['posts']) < 20:
+                    print('[gather_posts] Setting remaining count to zero.')
+                    remaining_count = 0
+                else:
+                    remaining_count -= 20
             else:
                 append_param_to_url(session, 'limit', remaining_count)
-                append_param_to_url(session, 'before', last_post.timestamp)
                 data = query_posts_get(session)
+                print(f'[gather_posts] len(data) returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
-                    posts.append(post)
+                    if post.id not in seen_ids:
+                        posts.append(post)
+                        seen_ids.add(post.id)
 
                 remaining_count = 0
-
+    print(f'[gather_posts] seen_ids set has {len(seen_ids)} elements')
     return posts
 
 def read_posts(session):
@@ -109,8 +120,11 @@ def read_posts(session):
 
     print(f'{len(posts)} post(s) acquired. Printing summaries...\n')
 
+    i = 1
     for post in posts:
+        print(f'Post {i} [ID: {post.id}]:')
         print(post)
+        i += 1
 
 def query_likes_get(session):
     # Get likes
@@ -232,7 +246,6 @@ def run_session():
     blog_identifier = craft_blog_id(blog_name)
     request_url = form_request_url(blog_identifier, target)
     
-
     # Create OAuth1 session
     oauth = OAuth1(
         consumer_key,
