@@ -41,9 +41,9 @@ def parse_user_input(qparams, session):
     append_qparams_to_url(session, qparams)
 
 # GET function for posts and drafts
-def get_posts(session):
+def query_posts_get(session):
     # Get posts / drafts
-    # print(f'Request URL: {request_url}')
+    print(f'[query_posts_get] Request URL: {session.request_url}')
     try:
         response = requests.get(session.request_url, auth=session.oauth)
         response.raise_for_status()
@@ -59,9 +59,9 @@ def get_posts(session):
     except ValueError as error:
         print(f"Error parsing JSON: {error}")
         return
-
-def read_posts(session):
-    data = get_posts(session)
+    
+def gather_posts(session):
+    data = query_posts_get(session)
 
     posts = []
     for p in data['response']['posts']:
@@ -70,17 +70,15 @@ def read_posts(session):
 
     limit = session.get_param('limit')
     if limit and limit > 20:
-        print('Greedy. Want more posts, do you?\n')
+        print('[gather_posts] Greedy. Want more posts, do you?\n')
         remaining_count = limit - 20
+        print(f'[gather_posts] Looks like... {remaining_count} more, hm?')
         last_post = posts[-1]
-        print(f'Timestamp of last post: {last_post.timestamp}')
         while remaining_count > 0:
             if remaining_count > 20:
-                # Figure out how to do this.... make a change_limit function?
-                # OR break up the append_qparams_to_url function
-                # Make a separate file for url construction (url_constructor.py?)
                 append_param_to_url(session, 'limit', 20)
-                data = get_posts(session)
+                append_param_to_url(session, 'before', last_post.timestamp)
+                data = query_posts_get(session)
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
                     posts.append(post)
@@ -88,12 +86,18 @@ def read_posts(session):
                 remaining_count -= 20
             else:
                 append_param_to_url(session, 'limit', remaining_count)
-                data = get_posts(session)
+                append_param_to_url(session, 'before', last_post.timestamp)
+                data = query_posts_get(session)
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
                     posts.append(post)
 
                 remaining_count = 0
+
+    return posts
+
+def read_posts(session):
+    posts = gather_posts(session)
 
     # print(request_url)
     # Split at '/v2/blog/' to get the blog part first
@@ -108,7 +112,7 @@ def read_posts(session):
     for post in posts:
         print(post)
 
-def get_likes(session):
+def query_likes_get(session):
     # Get likes
     try:
         response = requests.get(session.request_url, auth=session.oauth)
@@ -127,7 +131,7 @@ def get_likes(session):
         return
 
 def read_likes(session):
-    data = get_likes(session)
+    data = query_likes_get(session)
 
     posts = []
     for p in data['response']['liked_posts']:
@@ -148,13 +152,7 @@ def read_likes(session):
         print(post)
     
 def read_drafts(session):
-    data = get_posts(session)
-
-    # Create class instances for posts returned
-    posts = []
-    for p in data['response']['posts']:
-        post = Post.get_info(p)
-        posts.append(post)
+    posts = gather_posts(session)
 
     # Split at '/v2/blog/' to get the blog part first
     blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
@@ -169,7 +167,7 @@ def read_drafts(session):
         print(post)
 
 def unlike_posts(session):
-    data = get_likes(session)
+    data = query_likes_get(session)
     posts = []
     for p in data['response']['liked_posts']:
         post = Post.get_info(p)
@@ -198,12 +196,7 @@ def unlike_posts(session):
         print('No likes found matching given parameters. 0 posts unliked.')
 
 def delete_posts(session):
-    data = get_posts(session)
-
-    posts = []
-    for p in data['response']['posts']:
-        post = Post.get_info(p)
-        posts.append(post)
+    posts = gather_posts(session)
 
     print(f'Request URL: {session.request_url}')
     # Split at '/v2/blog/' to get the blog part first
@@ -233,8 +226,6 @@ def delete_posts(session):
             print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
     else:
         print('No posts found matching given parameters. 0 posts deleted.')
-    
-    # if not ('l' in qparams or 'limit' in qparams):
 
 def run_session():
     blog_name, target, function, qparams = get_user_input()

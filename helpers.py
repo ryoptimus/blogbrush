@@ -285,14 +285,15 @@ def append_tags_to_url(session, tags):
 
 def append_param_to_url(session, param_name, param):
     request_url = session.request_url
-
+    if param_name == 'limit' and param > 20:
+        return
     if f'{param_name}=' in request_url:
         base, query = request_url.split("?", 1)
         parts = query.split("&")
 
         for i, p in enumerate(parts):
-            if p.startswith(f'{param}='):
-                parts[i] = f'{param}={param}'
+            if p.startswith(f'{param_name}='):
+                parts[i] = f'{param_name}={param}'
                 break
 
         request_url = base + "?" + "&".join(parts)
