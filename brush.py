@@ -82,21 +82,21 @@ def gather_posts(session):
             if remaining_count > 20:
                 append_param_to_url(session, 'limit', 20)
                 data = query_posts_get(session)
-                print(f'[gather_posts] len(data) returned from call: {len(data['response']['posts'])}')
+                print(f'[gather_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
                     if post.id not in seen_ids:
                         posts.append(post)
                         seen_ids.add(post.id)
                 if len(data['response']['posts']) < 20:
-                    print('[gather_posts] Setting remaining count to zero.')
+                    print('[gather_posts] No more posts found. Setting remaining count to zero.')
                     remaining_count = 0
                 else:
                     remaining_count -= 20
             else:
                 append_param_to_url(session, 'limit', remaining_count)
                 data = query_posts_get(session)
-                print(f'[gather_posts] len(data) returned from call: {len(data['response']['posts'])}')
+                print(f'[gather_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
                     if post.id not in seen_ids:
@@ -122,8 +122,8 @@ def read_posts(session):
 
     i = 1
     for post in posts:
-        print(f'Post {i} [ID: {post.id}]:')
-        print(post)
+        print(f'Post {i} [ID: {post.id}]: {post}')
+        # print(post)
         i += 1
 
 def query_likes_get(session):
