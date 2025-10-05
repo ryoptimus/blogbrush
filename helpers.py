@@ -39,8 +39,8 @@ def get_target():
 
     if target.lower() == 'p' or target.lower() == 'posts':
         print('You have selected posts.\n')
-    elif target.lower() == 'l' or target.lower() == 'drafts':
-        print('You have selected drafts.\n')
+    elif target.lower() == 'l' or target.lower() == 'likes':
+        print('You have selected likes.\n')
     else:
         print('You have selected drafts.\n')
 

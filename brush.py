@@ -6,6 +6,7 @@ from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
 from session import Session
 from post import Post
+from query import posts_get, likes_get
 from helpers import (
     get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_param_to_url, append_qparams_to_url
 )
@@ -39,29 +40,9 @@ def get_user_input():
 
 def parse_user_input(qparams, session):
     append_qparams_to_url(session, qparams)
-
-# GET function for posts and drafts
-def query_posts_get(session):
-    # Get posts / drafts
-    print(f'[query_posts_get] Request URL: {session.request_url}')
-    try:
-        response = requests.get(session.request_url, auth=session.oauth)
-        response.raise_for_status()
-        
-    except requests.exceptions.RequestException as error:
-        print(f"Error: {error}")
-
-    # Parse JSON
-    try:
-        data = response.json()
-        # print(json.dumps(data['response']['posts'], indent=2))
-        return data
-    except ValueError as error:
-        print(f"Error parsing JSON: {error}")
-        return
     
 def gather_posts(session):
-    data = query_posts_get(session)
+    data = posts_get(session)
 
     posts = []
     seen_ids = set()
@@ -81,7 +62,7 @@ def gather_posts(session):
             append_param_to_url(session, 'before', last_post.timestamp)
             if remaining_count > 20:
                 append_param_to_url(session, 'limit', 20)
-                data = query_posts_get(session)
+                data = posts_get(session)
                 print(f'[gather_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
@@ -95,7 +76,7 @@ def gather_posts(session):
                     remaining_count -= 20
             else:
                 append_param_to_url(session, 'limit', remaining_count)
-                data = query_posts_get(session)
+                data = posts_get(session)
                 print(f'[gather_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
@@ -110,7 +91,6 @@ def gather_posts(session):
 def read_posts(session):
     posts = gather_posts(session)
 
-    # print(request_url)
     # Split at '/v2/blog/' to get the blog part first
     blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
@@ -122,30 +102,12 @@ def read_posts(session):
 
     i = 1
     for post in posts:
-        print(f'Post {i} [ID: {post.id}]: {post}')
+        print(f'Post {i} [ID: {post.id}]: {post}\n')
         # print(post)
         i += 1
 
-def query_likes_get(session):
-    # Get likes
-    try:
-        response = requests.get(session.request_url, auth=session.oauth)
-        response.raise_for_status()
-        
-    except requests.exceptions.RequestException as error:
-        print(f"Error: {error}")
-
-    # Parse JSON
-    try:
-        data = response.json()
-        # print(json.dumps(data['response']['liked_posts'], indent=2))
-        return data
-    except ValueError as error:
-        print(f"Error parsing JSON: {error}")
-        return
-
 def read_likes(session):
-    data = query_likes_get(session)
+    data = likes_get(session)
 
     posts = []
     for p in data['response']['liked_posts']:
@@ -164,7 +126,9 @@ def read_likes(session):
 
     for post in posts:
         print(post)
-    
+
+# TODO: Implement higher draft limit, but it'll be different. No limit param, or before
+#       However, a before_id param exists...  
 def read_drafts(session):
     posts = gather_posts(session)
 
@@ -181,7 +145,7 @@ def read_drafts(session):
         print(post)
 
 def unlike_posts(session):
-    data = query_likes_get(session)
+    data = likes_get(session)
     posts = []
     for p in data['response']['liked_posts']:
         post = Post.get_info(p)
@@ -281,6 +245,7 @@ def run_session():
         unlike_posts(session)
     else:
         print('You have chosen to edit posts.\n')
+        # TODO: Write / test edit logic
 
 if __name__ == "__main__":
     run_session()
