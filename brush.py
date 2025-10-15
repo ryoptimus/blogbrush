@@ -106,13 +106,54 @@ def read_posts(session):
         # print(post)
         i += 1
 
-def read_likes(session):
+def gather_likes(session):
     data = likes_get(session)
 
     posts = []
+    seen_ids = set()
     for p in data['response']['liked_posts']:
         post = Post.get_info(p)
         posts.append(post)
+        seen_ids.add(post.id)
+
+    limit = session.get_param('limit')
+    if limit and limit > 20:
+        print('[gather_likes] Greedy. Want more posts, do you?\n')
+        remaining_count = limit - 20
+        print(f'[gather_likes] Looks like... {remaining_count} more, hm?')
+        while remaining_count > 0:
+            last_post = posts[-1]
+            append_param_to_url(session, 'before', last_post.timestamp)
+            if remaining_count > 20:
+                append_param_to_url(session, 'limit', 20)
+                data = posts_get(session)
+                print(f'[gather_likes] Posts returned from call: {len(data['response']['posts'])}')
+                for p in data['response']['liked_posts']:
+                    post = Post.get_info(p)
+                    if post.id not in seen_ids:
+                        posts.append(post)
+                        seen_ids.add(post.id)
+                if len(data['response']['liked_posts']) < 20:
+                    print('[gather_likes] No more posts found. Setting remaining count to zero.')
+                    remaining_count = 0
+                else:
+                    remaining_count -= 20
+            else:
+                append_param_to_url(session, 'limit', remaining_count)
+                data = posts_get(session)
+                print(f'[gather_likes] Posts returned from call: {len(data['response']['liked_posts'])}')
+                for p in data['response']['liked_posts']:
+                    post = Post.get_info(p)
+                    if post.id not in seen_ids:
+                        posts.append(post)
+                        seen_ids.add(post.id)
+
+                remaining_count = 0
+    print(f'[gather_likes] seen_ids set has {len(seen_ids)} elements')
+    return posts
+
+def read_likes(session):
+    posts = gather_likes(session)
 
     print(f'Request URL: {session.request_url}')
     # Split at '/v2/blog/' to get the blog part first
@@ -145,17 +186,13 @@ def read_drafts(session):
         print(post)
 
 def unlike_posts(session):
-    data = likes_get(session)
-    posts = []
-    for p in data['response']['liked_posts']:
-        post = Post.get_info(p)
-        posts.append(post)
+    posts = gather_likes(session)
     
     print(f'{len(posts)} like(s) acquired. Unliking...\n')
 
     if posts:
         for post in posts:
-            # print(post)
+            print(post)
             unlike_url = f'https://api.tumblr.com/v2/user/unlike'
             rparams = {
                 'id': post.id,
