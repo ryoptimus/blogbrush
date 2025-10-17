@@ -326,3 +326,26 @@ def append_qparams_to_url(session, qparams):
         limit = session.get_param('limit')
         if limit:
             append_param_to_url(session, 'limit', limit)
+
+def get_edit_info(session):
+    function_query = '\tDo you want to delete (d, delete) or add (a, add) a tag?\n\t\tYour entry: '
+    # TODO: Add input checking
+    function = input(function_query)
+    if function == 'd' or function == 'delete':
+        tag_query = '\tInput the tag you wish to delete: '
+    else:
+        tag_query = '\tInput the tag you wish to add: '
+    tag = input(tag_query)
+    return function, tag
+
+
+def edit_tags_list(function, tags, tag):
+    if function == 'd' or function == 'delete':
+        if tag not in tags:
+            print(f'F@#&! Looks like this post doesn\'t contain tag \'{tag}.\' No editing to be done here...')
+            return tags
+        tags.remove(tag)
+        return tags
+    else:
+        tags.append(tag)
+        return tags

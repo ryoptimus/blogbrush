@@ -133,3 +133,36 @@ def gather_likes(session):
                 remaining_count = 0
     print(f'[gather_likes] seen_ids set has {len(seen_ids)} elements')
     return posts
+
+def edit_post_legacy(session, post, new_tags):
+    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/edit'
+
+    payload = {
+        'id': post.id, 
+        'tags': ','.join(new_tags)
+    }
+    try:
+        edit_response = requests.post(edit_url, auth=session.oauth, data=payload)
+        edit_response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        print(f'Error editing post {post.id}: {error}')
+    print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
+ 
+def edit_post_npf(session, post, new_tags):
+    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/posts/{post.id}'
+    payload = {
+        'tags': new_tags,
+    }
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    try:
+        edit_response = requests.put(edit_url, auth=session.oauth, json=payload, headers=headers)
+        edit_response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        print(f'Error editing post {post.id}: {error}')
+    
+    print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')

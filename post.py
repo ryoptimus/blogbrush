@@ -2,6 +2,13 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any
 
+def detect_format(p: dict):
+    if isinstance(p.get('content'), list):
+        return 'npf'
+    if ('body' in p) or ('caption' in p):
+        return 'legacy'
+    return 'unknown'
+
 @dataclass
 class Post:
     id: int
@@ -12,6 +19,7 @@ class Post:
     summary: str
     reblog_key: str
     tags: List[str]
+    format: str = 'unknown'
 
     @classmethod
     def get_info(cls, post: Dict[str, Any]):
@@ -23,5 +31,6 @@ class Post:
             timestamp = int(post.get('timestamp', 0)),
             summary = post.get('summary', ''),
             reblog_key = post.get('reblog_key', ''),
-            tags = post.get('tags', [])
+            tags = post.get('tags', []),
+            format = detect_format(post)
         )

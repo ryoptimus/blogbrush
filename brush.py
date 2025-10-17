@@ -6,9 +6,9 @@ from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
 from session import Session
 from post import Post
-from query import gather_posts, gather_likes
+from query import gather_posts, gather_likes, edit_post_legacy, edit_post_npf
 from helpers import (
-    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_param_to_url, append_qparams_to_url
+    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url, get_edit_info, edit_tags_list
 )
 
 load_dotenv()
@@ -44,13 +44,6 @@ def parse_user_input(qparams, session):
 def read_posts(session):
     posts = gather_posts(session)
 
-    # Split at '/v2/blog/' to get the blog part first
-    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
-
-    # Split at '.' to get the blog identifier
-    blog_id = blog_part.split('/')[0]
-    # print(blog_id)
-
     print(f'{len(posts)} post(s) acquired. Printing summaries...\n')
 
     i = 1
@@ -63,12 +56,6 @@ def read_likes(session):
     posts = gather_likes(session)
 
     print(f'Request URL: {session.request_url}')
-    # Split at '/v2/blog/' to get the blog part first
-    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
-
-    # Split at '.' to get the blog identifier
-    blog_id = blog_part.split('/')[0]
-    # print(blog_id)
 
     print(f'{len(posts)} like(s) acquired. Printing summaries...\n')
 
@@ -79,13 +66,6 @@ def read_likes(session):
 #       However, a before_id param exists...  
 def read_drafts(session):
     posts = gather_posts(session)
-
-    # Split at '/v2/blog/' to get the blog part first
-    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
-
-    # Split at '.' to get the blog identifier
-    blog_id = blog_part.split('/')[0]
-    # print(blog_id)
 
     print(f'{len(posts)} draft(s) acquired. Printing summaries...\n')
 
@@ -117,6 +97,30 @@ def unlike_posts(session):
     else:
         print('No likes found matching given parameters. 0 posts unliked.')
 
+def edit_posts(session):
+    posts = gather_posts(session)
+    function, tag = get_edit_info(session)
+
+    print(f'Request URL: {session.request_url}')
+
+    if posts:
+        print(f'{len(posts)} post(s) acquired.\n')
+        for post in posts:
+            print(post)
+            old_tags = post.tags.copy()
+            # print(f'Old tags: {old_tags}')
+            new_tags = edit_tags_list(function, post.tags, tag)
+            # print(f'New tags: {new_tags}')
+            if old_tags == new_tags:
+                print('Yikes. You didn\'t add OR delete anything. What\'s the matter with you?')
+                continue
+            if post.format == 'legacy':
+                edit_post_legacy(session, post, new_tags)
+            else:
+                edit_post_npf(session, post, new_tags)
+    else:
+        print('No posts found matching given parameters. 0 posts edited.')
+
 def delete_posts(session):
     posts = gather_posts(session)
 
@@ -124,7 +128,7 @@ def delete_posts(session):
     # Split at '/v2/blog/' to get the blog part first
     blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
 
-    # Split at '.' to get the blog identifier
+    # Split at '/' to get the blog identifier
     blog_id = blog_part.split('/')[0]
     # print(blog_id)
 
@@ -189,7 +193,7 @@ def run_session():
         unlike_posts(session)
     else:
         print('You have chosen to edit posts.\n')
-        # TODO: Write / test edit logic
+        edit_posts(session)
 
 if __name__ == "__main__":
     run_session()
