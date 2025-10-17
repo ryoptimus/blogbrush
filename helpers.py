@@ -328,14 +328,23 @@ def append_qparams_to_url(session, qparams):
             append_param_to_url(session, 'limit', limit)
 
 def get_edit_info(session):
-    function_query = '\tDo you want to delete (d, delete) or add (a, add) a tag?\n\t\tYour entry: '
-    # TODO: Add input checking
-    function = input(function_query)
+    valid_fxn = False
+    while not valid_fxn:
+        function_query = '\tDo you want to delete (d, delete) or add (a, add) a tag?\n\t\tYour entry: '
+        function = input(function_query)
+        if function == 'a' or function == 'add':
+            valid_fxn = True
+        if function == 'd' or function == 'delete':
+            valid_fxn = True
     if function == 'd' or function == 'delete':
         tag_query = '\tInput the tag you wish to delete: '
     else:
         tag_query = '\tInput the tag you wish to add: '
-    tag = input(tag_query)
+    valid_tag = False
+    while not valid_tag:
+        tag = input(tag_query)
+        if not ',' in tag:
+            valid_tag = True
     return function, tag
 
 
