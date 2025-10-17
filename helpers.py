@@ -227,7 +227,7 @@ def get_searchdate(session, date_qp):
 def get_limit(session):
     limit = None
     while not limit_is_valid(limit):
-        limit = input('\tInput limit of posts to alter / read (1-50): ')
+        limit = input('\tInput limit of posts to alter / read (1-200): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
     session.set_limit(int(limit))
 

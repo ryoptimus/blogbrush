@@ -8,6 +8,9 @@ def posts_get(session):
     print(f'[query_posts_get] Request URL: {session.request_url}')
     try:
         response = requests.get(session.request_url, auth=session.oauth)
+        if response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
@@ -24,6 +27,9 @@ def posts_get(session):
     
 def gather_posts(session):
     data = posts_get(session)
+
+    if not data:
+        return []
 
     posts = []
     seen_ids = set()
@@ -74,6 +80,9 @@ def likes_get(session):
     # Get likes
     try:
         response = requests.get(session.request_url, auth=session.oauth)
+        if response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
@@ -90,6 +99,9 @@ def likes_get(session):
     
 def gather_likes(session):
     data = likes_get(session)
+
+    if not data:
+        return []
 
     posts = []
     seen_ids = set()

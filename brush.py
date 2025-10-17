@@ -124,29 +124,29 @@ def edit_posts(session):
 def delete_posts(session):
     posts = gather_posts(session)
 
-    print(f'Request URL: {session.request_url}')
-    # Split at '/v2/blog/' to get the blog part first
-    blog_part = session.request_url.split('/v2/blog/')[1]  # username.tumblr.com/posts
-
-    # Split at '/' to get the blog identifier
-    blog_id = blog_part.split('/')[0]
-    # print(blog_id)
+    # print(f'Request URL: {session.request_url}')
 
     if posts:
         print(f'{len(posts)} post(s) acquired. Deleting...\n')
-        
+        i = 1
         for post in posts:
-            print(post)
-            delete_url = f'https://api.tumblr.com/v2/blog/{blog_id}/post/delete'
+            print(f'Post {i} [ID: {post.id}]: {post}\n')
+            i += 1
+            delete_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/delete'
             rparams = {
                 'id': post.id
             }
 
             try:
                 del_response = requests.post(delete_url, auth=session.oauth, data=rparams)
+
+                if del_response.status_code == 429:
+                    print('Rate limit exceeded. Stopping deletions.')
+                    break
+
                 del_response.raise_for_status()
             except requests.exceptions.RequestException as error:
-                print(f"Error deleting post {post.id}: {error}")
+                print(f'Error deleting post {post.id}: {error}')
                 continue
 
             print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
