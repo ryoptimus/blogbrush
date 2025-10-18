@@ -108,8 +108,46 @@ def gather_q_posts(session):
         if post.id not in seen_ids:
             posts.append(post)
             seen_ids.add(post.id)
+
+    offset = session.get_param('offset')
+    if not offset:
+        offset = 0
+    limit = session.get_param('limit')
+    if limit and limit > 20:
+        print('[gather_q_posts] Greedy. Want more posts, do you?\n')
+        remaining_count = limit - 20
+        print(f'[gather_q_posts] Looks like... {remaining_count} more, hm?')
+        while remaining_count > 0:
+            append_param_to_url(session, 'offset', len(posts))
+            print(f'Offset is now {offset}.')
+            if remaining_count > 20:
+                append_param_to_url(session, 'limit', 20)
+                data = q_posts_get(session)
+                print(f'[gather_q_posts] Posts returned from call: {len(data['response']['posts'])}')
+                for p in data['response']['posts']:
+                    post = Post.get_info(p)
+                    if post.id not in seen_ids:
+                        posts.append(post)
+                        seen_ids.add(post.id)
+                if len(data['response']['posts']) < 20:
+                    print('[gather_posts] No more posts found. Setting remaining count to zero.')
+                    remaining_count = 0
+                else:
+                    remaining_count -= 20
+            else:
+                append_param_to_url(session, 'limit', remaining_count)
+                data = q_posts_get(session)
+                print(f'[gather_q_posts] Posts returned from call: {len(data['response']['posts'])}')
+                for p in data['response']['posts']:
+                    post = Post.get_info(p)
+                    if post.id not in seen_ids:
+                        posts.append(post)
+                        seen_ids.add(post.id)
+
+                remaining_count = 0
     
-    print(f'[gather_q_posts] seen_ids set has {len(seen_ids)} elements')
+    # print(f'[gather_q_posts] posts list has {len(posts)} elements.')
+    print(f'[gather_q_posts] seen_ids set has {len(seen_ids)} elements.')
     return posts
 
 # GET function for likes   
@@ -180,7 +218,7 @@ def gather_likes(session):
                         seen_ids.add(post.id)
 
                 remaining_count = 0
-    print(f'[gather_likes] seen_ids set has {len(seen_ids)} elements')
+    print(f'[gather_likes] seen_ids set has {len(seen_ids)} elements.')
     return posts
 
 def edit_post_legacy(session, post, new_tags):

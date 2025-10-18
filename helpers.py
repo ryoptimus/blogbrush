@@ -135,25 +135,27 @@ def get_qparams(target):
         'Offset (o, offset): post number to start at (0 is the first post)\n\t' \
         'Before (b, before): returns posts published before a specified timestamp\n\t' \
         'After (a, after): returns posts published before a specified timestamp\n\t' \
-        'Limit (l, limit): the number of results to return (1–20, inclusive)\n\t' \
+        'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
         'Your selection should be a string of characters separated by spaces.\n\t\t' \
-        'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
+        'e.g., \'o l\' OR \'offset limit\' to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
     elif target.lower() == 'q' or target.lower() == 'qposts':
         input_prompt = '\nWhat query parameter would you like to specify?\n\t' \
         'Offset (o, offset): post number to start at (0 is the first post)\n\t' \
+        'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
+        'e.g., \'o l\' OR \'offset limit\' to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
     elif target.lower() == 'l' or target.lower() == 'likes':
         input_prompt = '\nWhat query parameters would you like to specify?\n\t' \
         'Offset (o, offset): post number to start at\n\t' \
         'Before (b, before): returns posts liked before a specified timestamp\n\t' \
         'After (a, after): returns posts liked before a specified timestamp\n\t' \
-        'Limit (l, limit): the number of results to return (1–20, inclusive)\n\t' \
+        'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
         'Your selection should be a string of characters separated by spaces.\n\t\t' \
-        'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
+        'e.g., \'o l\' OR \'offset limit\' to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
     # Drafts only support before_id and filter as query parameters but idc about those
     else:
