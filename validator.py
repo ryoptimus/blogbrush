@@ -32,7 +32,7 @@ def qparams_are_valid(qparams_chosen):
         return False
     
 def tag_amount_is_valid(tag_amount):
-    if tag_amount == 'stringgg':
+    if tag_amount == None:
         return False
     if int(tag_amount) > 0 and int(tag_amount) < 5:
         return True
@@ -40,14 +40,13 @@ def tag_amount_is_valid(tag_amount):
     return False
     
 def tag_is_valid(tag):
-    # Default tag, don't print anything
-    if tag == 'mo,om':
+    if tag == None:
         return False
     elif not tag:
-        print('\tTag cannot be blank. Please try again.')
+        print('\t\tTag cannot be blank. Please try again.')
         return False
     elif ',' in tag:
-        print('\tTag cannot contain commas. Please try again.')
+        print('\t\tTag cannot contain commas. Please try again.')
         return False
     else: 
         return True

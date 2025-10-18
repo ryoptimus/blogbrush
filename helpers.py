@@ -149,7 +149,7 @@ def get_qparams(target):
         'Selection: '
     elif target.lower() == 'l' or target.lower() == 'likes':
         input_prompt = '\nWhat query parameters would you like to specify?\n\t' \
-        'Offset (o, offset): post number to start at\n\t' \
+        'Offset (o, offset): post number to start at (1,000 max)\n\t' \
         'Before (b, before): returns posts liked before a specified timestamp\n\t' \
         'After (a, after): returns posts liked before a specified timestamp\n\t' \
         'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
@@ -177,7 +177,7 @@ def get_type(session):
     session.set_type(type)
 
 def get_tags(session):
-    tag_amount = 'stringgg'
+    tag_amount = None
     print('\tHow many tags would you like to specify?')
     while not tag_amount_is_valid(tag_amount):
         tag_amount = input('\t\tAmount: ')
@@ -185,12 +185,12 @@ def get_tags(session):
     print(f'\tYou have chosen to specify {tag_amount} tag(s). Input them below.')
     tags = []
     for i in range(tag_amount):
-        tag = 'mo,om'
+        tag = None
         while not tag_is_valid(tag):
             tag = input(f'\t\tTag {i + 1}: ')
         tag = format_tag(tag)
         tags.append(tag)
-    print(f"\tYou have selected the following tag(s): {', '.join(tags)}\n")
+    print(f'\tYou have selected the following tag(s): {', '.join(tags)}\n')
     session.set_tags(tags)
 
 def get_offset(session):
