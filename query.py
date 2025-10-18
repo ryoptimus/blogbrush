@@ -15,7 +15,7 @@ def posts_get(session):
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
-        print(f"Error: {error}")
+        print(f'Error: {error}')
 
     # Parse JSON
     try:
@@ -23,7 +23,7 @@ def posts_get(session):
         # print(json.dumps(data['response']['posts'], indent=2))
         return data
     except ValueError as error:
-        print(f"Error parsing JSON: {error}")
+        print(f'Error parsing JSON: {error}')
         return
     
 def gather_posts(session):
@@ -248,6 +248,9 @@ def edit_post_legacy(session, post, new_tags):
     }
     try:
         edit_response = requests.post(edit_url, auth=session.oauth, data=payload)
+        if edit_response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
         edit_response.raise_for_status()
     except requests.exceptions.RequestException as error:
         print(f'Error editing post {post.id}: {error}')
@@ -266,6 +269,9 @@ def edit_post_npf(session, post, new_tags):
 
     try:
         edit_response = requests.put(edit_url, auth=session.oauth, json=payload, headers=headers)
+        if edit_response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
         edit_response.raise_for_status()
     except requests.exceptions.RequestException as error:
         print(f'Error editing post {post.id}: {error}')
