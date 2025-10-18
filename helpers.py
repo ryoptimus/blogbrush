@@ -27,18 +27,22 @@ def craft_blog_id(blog_name):
 def get_target():
     target = 'x'
     targets = ['p', 'posts',
+               'q', 'qposts',
                'l', 'likes',
                'd', 'drafts']
 
     while target.lower() not in targets:
         target = input('\nWTW?\n\t' \
         'For posts, type p or posts.\n\t' \
+        'For queued posts, type q or qposts.\n\t' \
         'For likes, type l or likes.\n\t' \
         'For drafts, type d or drafts.\n\n\t' \
         'Selection: ')
 
     if target.lower() == 'p' or target.lower() == 'posts':
         print('You have selected posts.\n')
+    elif target.lower() == 'q' or target.lower() == 'qposts':
+        print('You have selected queued posts.\n')
     elif target.lower() == 'l' or target.lower() == 'likes':
         print('You have selected likes.\n')
     else:
@@ -62,8 +66,8 @@ def get_function(target):
         'For reading, type r or read.\n\tFor unliking, type u or unlike.\n\n\t' \
         'Selection: '
     else:
-        # IDK what else you can do with drafts and idrc rn
-        print('Default functionality for drafts is read. Hope you brought your spectacles.\n')
+        # IDK what else you can do with queued posts/drafts and idrc rn
+        print('Default functionality for queued posts and drafts is read. Hope you brought your spectacles.\n')
         return 'r'
     
     while function.lower() not in functions:
@@ -73,8 +77,6 @@ def get_function(target):
         print('You have chosen the read function.\n')
     elif function.lower() == 'd' or function.lower == 'delete':
         print('You have chosen the delete function.\n')
-    elif function.lower() == 'e' or function.lower == 'edit':
-        print('You have chosen the edit function.\n')
     else:
         print('You have chosen the edit function.\n')
 
@@ -149,6 +151,8 @@ def get_qparams(target):
         'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
     # Drafts only support before_id and filter as query parameters but idc about those
+    # Queue also supports some query parameters but who cares
+    # TODO: Implement queue parameters
     else:
         qparams = 'n'
         return qparams

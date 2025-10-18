@@ -5,8 +5,7 @@ import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
 from session import Session
-from post import Post
-from query import gather_posts, gather_likes, edit_post_legacy, edit_post_npf
+from query import gather_posts, gather_q_posts, gather_likes, edit_post_legacy, edit_post_npf
 from helpers import (
     get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url, get_edit_info, edit_tags_list
 )
@@ -23,6 +22,8 @@ def form_request_url(blog_identifier, target):
     api_url = f'https://api.tumblr.com/v2/blog/{blog_identifier}'
     if target.lower() == 'p' or target.lower() == 'posts':
         request_url = api_url + '/posts'
+    elif target.lower() == 'q' or target.lower() == 'qposts':
+        request_url = api_url + '/posts/queue'
     elif target.lower() == 'l' or target.lower() == 'likes':
         request_url = api_url + f'/likes?api_key={consumer_key}'
     else:
@@ -48,7 +49,15 @@ def read_posts(session):
 
     i = 1
     for post in posts:
-        print(f'Post {i} [ID: {post.id}]: {post}\n')
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
+
+def read_q_posts(session):
+    posts = gather_q_posts(session)
+    i = 1
+    for post in posts:
+        print(f'Post {i}: {post}\n')
         # print(post)
         i += 1
 
@@ -131,7 +140,7 @@ def delete_posts(session):
         print(f'{len(posts)} post(s) acquired. Deleting...\n')
         i = 1
         for post in posts:
-            print(f'Post {i} [ID: {post.id}]: {post}\n')
+            print(f'Post {i}: {post}\n')
             i += 1
             delete_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/delete'
             rparams = {
@@ -180,6 +189,9 @@ def run_session():
         if target == 'p' or target == 'posts':
             print('You have chosen to read posts.\n')
             read_posts(session)
+        elif target == 'q' or target == 'qposts':
+            print('Let\'s read some queued posts.')
+            read_q_posts(session)
         elif target == 'l' or target == 'likes':
             print('You have chosen to read likes.\n')
             read_likes(session)
@@ -196,5 +208,5 @@ def run_session():
         print('You have chosen to edit posts.\n')
         edit_posts(session)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run_session()

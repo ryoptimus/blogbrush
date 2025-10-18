@@ -1,3 +1,4 @@
+import json
 import requests
 from post import Post
 from helpers import append_param_to_url
@@ -75,6 +76,42 @@ def gather_posts(session):
     print(f'[gather_posts] seen_ids set has {len(seen_ids)} elements')
     return posts
 
+def q_posts_get(session):
+    try:
+        response = requests.get(session.request_url, auth=session.oauth)
+        if response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
+        response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        print(f'Error: {error}')
+
+    # Parse JSON
+    try:
+        data = response.json()
+        # print(json.dumps(data['response'], indent=2))
+        return data
+    except ValueError as error:
+        print(f'Error parsing JSON: {error}')
+        return
+
+def gather_q_posts(session):
+    data = q_posts_get(session)
+
+    if not data:
+        return []
+    
+    posts = []
+    seen_ids = set()
+    for p in data['response']['posts']:
+        post = Post.get_info(p)
+        if post.id not in seen_ids:
+            posts.append(post)
+            seen_ids.add(post.id)
+    
+    print(f'[gather_q_posts] seen_ids set has {len(seen_ids)} elements')
+    return posts
+
 # GET function for likes   
 def likes_get(session):
     # Get likes
@@ -86,7 +123,7 @@ def likes_get(session):
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
-        print(f"Error: {error}")
+        print(f'Error: {error}')
 
     # Parse JSON
     try:
@@ -94,7 +131,7 @@ def likes_get(session):
         # print(json.dumps(data['response']['liked_posts'], indent=2))
         return data
     except ValueError as error:
-        print(f"Error parsing JSON: {error}")
+        print(f'Error parsing JSON: {error}')
         return
     
 def gather_likes(session):
