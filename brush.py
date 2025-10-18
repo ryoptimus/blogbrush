@@ -109,7 +109,7 @@ def unlike_posts(session):
 
 def edit_posts(session):
     posts = gather_posts(session)
-    function, tag = get_edit_info(session)
+    function, tag = get_edit_info()
 
     print(f'Request URL: {session.request_url}')
 

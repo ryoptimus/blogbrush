@@ -128,7 +128,7 @@ def format_tag(tag):
 def get_qparams(target):
     qparams = 'x x x x'
 
-    if target == 'p' or target == 'posts':
+    if target.lower() == 'p' or target.lower() == 'posts':
         input_prompt = '\nWhat query parameters would you like to specify?\n\t' \
         'Type (t, type): the type of post to return\n\t' \
         'Tag (h, hashtag): limits the response to posts with the specified tag(s)\n\t' \
@@ -140,7 +140,12 @@ def get_qparams(target):
         'Your selection should be a string of characters separated by spaces.\n\t\t' \
         'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
-    elif target == 'l' or target == 'likes':
+    elif target.lower() == 'q' or target.lower() == 'qposts':
+        input_prompt = '\nWhat query parameter would you like to specify?\n\t' \
+        'Offset (o, offset): post number to start at (0 is the first post)\n\t' \
+        'None (n, none): indicates no selection\n\n\t' \
+        'Selection: '
+    elif target.lower() == 'l' or target.lower() == 'likes':
         input_prompt = '\nWhat query parameters would you like to specify?\n\t' \
         'Offset (o, offset): post number to start at\n\t' \
         'Before (b, before): returns posts liked before a specified timestamp\n\t' \
@@ -151,8 +156,6 @@ def get_qparams(target):
         'e.g., o l OR offset limit to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
     # Drafts only support before_id and filter as query parameters but idc about those
-    # Queue also supports some query parameters but who cares
-    # TODO: Implement queue parameters
     else:
         qparams = 'n'
         return qparams
@@ -331,7 +334,7 @@ def append_qparams_to_url(session, qparams):
         if limit:
             append_param_to_url(session, 'limit', limit)
 
-def get_edit_info(session):
+def get_edit_info():
     valid_fxn = False
     while not valid_fxn:
         function_query = '\tDo you want to delete (d, delete) or add (a, add) a tag?\n\t\tYour entry: '
