@@ -62,8 +62,6 @@ def read_likes(session):
     for post in posts:
         print(post)
 
-# TODO: Implement higher draft limit, but it'll be different. No limit param, or before
-#       However, a before_id param exists...  
 def read_drafts(session):
     posts = gather_posts(session)
 
@@ -88,6 +86,9 @@ def unlike_posts(session):
 
             try:
                 unlike_response = requests.post(unlike_url, auth=session.oauth, data=rparams)
+                if unlike_response.status_code == 429:
+                    print('Rate limit exceeded. Stopping unlikes.')
+                    break
                 unlike_response.raise_for_status()
             except requests.exceptions.RequestException as error:
                 print(f"Error unliking post {post.id}: {error}")
