@@ -31,14 +31,6 @@ def form_request_url(blog_identifier, target):
 
     return request_url
 
-def get_user_input():
-    blog_name = get_blog_name()
-    target = get_target()
-    function = get_function(target)
-    qparams = get_qparams(target)
-
-    return blog_name, target, function, qparams
-
 def parse_user_input(qparams, session):
     append_qparams_to_url(session, qparams)
 
@@ -169,18 +161,26 @@ def delete_posts(session):
     else:
         print('No posts found matching given parameters. 0 posts deleted.')
 
-def run_session():
-    blog_name, target, function, qparams = get_user_input()
+def session_instance_run(blog_name, oauth):
+    if blog_name is None:
+        blog_name = get_blog_name()
+    else:
+        valid_user_input = False
+        while not valid_user_input:
+            user_input = input(f'Target blog name is currently \'{blog_name}\'. Please confirm (y/n): ')
+            if user_input.lower() == 'y':
+                valid_user_input = True
+            elif user_input.lower() == 'n':
+                valid_user_input = True
+                blog_name = get_blog_name()
+            else:
+                print('Invalid input. Try again.')
+
+    target = get_target()
+    function = get_function(target)
+    qparams = get_qparams(target)
     blog_identifier = craft_blog_id(blog_name)
     request_url = form_request_url(blog_identifier, target)
-    
-    # Create OAuth1 session
-    oauth = OAuth1(
-        consumer_key,
-        consumer_secret,
-        token,
-        token_secret
-    )
 
     session = Session(
         blog_identifier = blog_identifier,
@@ -214,5 +214,35 @@ def run_session():
         print('You have chosen to edit posts.\n')
         edit_posts(session)
 
+    valid_user_input = False
+    while not valid_user_input:
+        user_input = input('Request complete.\n\nConclude session? Your input (y/n): ')
+        if user_input.lower() == 'y':
+            valid_user_input = True
+            session_conclude = True
+        if user_input.lower() == 'n':
+            print('\nGot it. Refreshing session...\n')
+            valid_user_input = True
+            session_conclude = False
+
+    return blog_name, session_conclude
+
+def session_run():
+    # Create OAuth1 session
+    oauth = OAuth1(
+        consumer_key,
+        consumer_secret,
+        token,
+        token_secret
+    )
+
+    blog_name = None
+    session_conclude = False
+
+    while not session_conclude:
+        blog_name, session_conclude = session_instance_run(blog_name, oauth)
+
+    print('\nSession concluded. See you next time!')
+
 if __name__ == '__main__':
-    run_session()
+    session_run()
