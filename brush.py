@@ -4,7 +4,7 @@ import json
 import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
-from session import Session
+from instance import Session
 from query import gather_posts, edit_posts, delete_posts, gather_q_posts, gather_likes, unlike_posts
 from helpers import (
     get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url
