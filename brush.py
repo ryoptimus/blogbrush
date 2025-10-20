@@ -5,9 +5,9 @@ import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
 from session import Session
-from query import gather_posts, gather_q_posts, gather_likes, edit_post_legacy, edit_post_npf
+from query import gather_posts, edit_posts, delete_posts, gather_q_posts, gather_likes, unlike_posts
 from helpers import (
-    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url, get_edit_info, edit_tags_list
+    get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url
 )
 
 load_dotenv()
@@ -76,90 +76,6 @@ def read_drafts(session):
         print(f'Post {i}: {post}\n')
         # print(post)
         i += 1
-
-def unlike_posts(session):
-    posts = gather_likes(session)
-    
-    print(f'{len(posts)} like(s) acquired. Unliking...\n')
-
-    if posts:
-        for post in posts:
-            print(post)
-            unlike_url = f'https://api.tumblr.com/v2/user/unlike'
-            rparams = {
-                'id': post.id,
-                'reblog_key': post.reblog_key
-            }
-
-            try:
-                unlike_response = requests.post(unlike_url, auth=session.oauth, data=rparams)
-                if unlike_response.status_code == 429:
-                    print('Rate limit exceeded. Stopping unlikes.')
-                    break
-                unlike_response.raise_for_status()
-            except requests.exceptions.RequestException as error:
-                print(f"Error unliking post {post.id}: {error}")
-                continue
-
-            print(f'Post {post.id} unliked successfully.\n(status: {unlike_response.json()['meta']['status']}, msg: {unlike_response.json()['meta']['msg']})\n')
-    else:
-        print('No likes found matching given parameters. 0 posts unliked.')
-
-def edit_posts(session):
-    posts = gather_posts(session)
-    function, tag = get_edit_info()
-
-    print(f'Request URL: {session.request_url}')
-
-    if posts:
-        print(f'{len(posts)} post(s) acquired.\n')
-        for post in posts:
-            print(post)
-            old_tags = post.tags.copy()
-            # print(f'Old tags: {old_tags}')
-            new_tags = edit_tags_list(function, post.tags, tag)
-            # print(f'New tags: {new_tags}')
-            if old_tags == new_tags:
-                print('Yikes. You didn\'t add OR delete anything. What\'s the matter with you?')
-                continue
-            if post.format == 'legacy':
-                edit_post_legacy(session, post, new_tags)
-            else:
-                edit_post_npf(session, post, new_tags)
-    else:
-        print('No posts found matching given parameters. 0 posts edited.')
-
-def delete_posts(session):
-    posts = gather_posts(session)
-
-    # print(f'Request URL: {session.request_url}')
-
-    if posts:
-        print(f'{len(posts)} post(s) acquired. Deleting...\n')
-        i = 1
-        for post in posts:
-            print(f'Post {i}: {post}\n')
-            i += 1
-            delete_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/delete'
-            rparams = {
-                'id': post.id
-            }
-
-            try:
-                del_response = requests.post(delete_url, auth=session.oauth, data=rparams)
-
-                if del_response.status_code == 429:
-                    print('Rate limit exceeded. Stopping deletions.')
-                    break
-
-                del_response.raise_for_status()
-            except requests.exceptions.RequestException as error:
-                print(f'Error deleting post {post.id}: {error}')
-                continue
-
-            print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
-    else:
-        print('No posts found matching given parameters. 0 posts deleted.')
 
 def session_instance_run(blog_name, oauth):
     if blog_name is None:

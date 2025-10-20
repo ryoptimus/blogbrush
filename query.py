@@ -1,7 +1,7 @@
 import json
 import requests
 from post import Post
-from helpers import append_param_to_url
+from helpers import append_param_to_url, get_edit_info, edit_tags_list
 
 # GET function for posts and drafts
 def posts_get(session):
@@ -83,6 +83,101 @@ def gather_posts(session):
     else:
         print(f'{limit} {target}(s) successfully found!\n')
     return posts
+
+def edit_post_legacy(session, post, new_tags):
+    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/edit'
+
+    payload = {
+        'id': post.id, 
+        'tags': ','.join(new_tags)
+    }
+    try:
+        edit_response = requests.post(edit_url, auth=session.oauth, data=payload)
+        if edit_response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
+        edit_response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        print(f'Error editing post {post.id}: {error}')
+    print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
+ 
+def edit_post_npf(session, post, new_tags):
+    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/posts/{post.id}'
+    payload = {
+        'tags': new_tags,
+    }
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    try:
+        edit_response = requests.put(edit_url, auth=session.oauth, json=payload, headers=headers)
+        if edit_response.status_code == 429:
+            print('Rate limit exceeded.')
+            return
+        edit_response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        print(f'Error editing post {post.id}: {error}')
+    
+    print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
+
+def edit_posts(session):
+    posts = gather_posts(session)
+    function, tag = get_edit_info()
+
+    print(f'Request URL: {session.request_url}')
+
+    if posts:
+        print(f'{len(posts)} post(s) acquired.\n')
+        for post in posts:
+            print(post)
+            old_tags = post.tags.copy()
+            # print(f'Old tags: {old_tags}')
+            new_tags = edit_tags_list(function, post.tags, tag)
+            # print(f'New tags: {new_tags}')
+            if old_tags == new_tags:
+                print('Yikes. You didn\'t add OR delete anything. What\'s the matter with you?')
+                continue
+            if post.format == 'legacy':
+                edit_post_legacy(session, post, new_tags)
+            else:
+                edit_post_npf(session, post, new_tags)
+    else:
+        print('No posts found matching given parameters. 0 posts edited.')
+
+def delete_posts(session):
+    posts = gather_posts(session)
+
+    # print(f'Request URL: {session.request_url}')
+
+    if posts:
+        print(f'{len(posts)} post(s) acquired. Deleting...\n')
+        i = 1
+        for post in posts:
+            print(f'Post {i}: {post}\n')
+            i += 1
+            delete_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/delete'
+            rparams = {
+                'id': post.id
+            }
+
+            try:
+                del_response = requests.post(delete_url, auth=session.oauth, data=rparams)
+
+                if del_response.status_code == 429:
+                    print('Rate limit exceeded. Stopping deletions.')
+                    break
+
+                del_response.raise_for_status()
+            except requests.exceptions.RequestException as error:
+                print(f'Error deleting post {post.id}: {error}')
+                continue
+
+            print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
+    else:
+        print('No posts found matching given parameters. 0 posts deleted.')
 
 def q_posts_get(session):
     try:
@@ -239,41 +334,30 @@ def gather_likes(session):
         print(f'{limit} liked post(s) successfully found!\n')
     return posts
 
-def edit_post_legacy(session, post, new_tags):
-    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/edit'
-
-    payload = {
-        'id': post.id, 
-        'tags': ','.join(new_tags)
-    }
-    try:
-        edit_response = requests.post(edit_url, auth=session.oauth, data=payload)
-        if edit_response.status_code == 429:
-            print('Rate limit exceeded.')
-            return
-        edit_response.raise_for_status()
-    except requests.exceptions.RequestException as error:
-        print(f'Error editing post {post.id}: {error}')
-    print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
- 
-def edit_post_npf(session, post, new_tags):
-    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/posts/{post.id}'
-    payload = {
-        'tags': new_tags,
-    }
-
-    headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    }
-
-    try:
-        edit_response = requests.put(edit_url, auth=session.oauth, json=payload, headers=headers)
-        if edit_response.status_code == 429:
-            print('Rate limit exceeded.')
-            return
-        edit_response.raise_for_status()
-    except requests.exceptions.RequestException as error:
-        print(f'Error editing post {post.id}: {error}')
+def unlike_posts(session):
+    posts = gather_likes(session)
     
-    print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
+    print(f'{len(posts)} like(s) acquired. Unliking...\n')
+
+    if posts:
+        for post in posts:
+            print(post)
+            unlike_url = f'https://api.tumblr.com/v2/user/unlike'
+            rparams = {
+                'id': post.id,
+                'reblog_key': post.reblog_key
+            }
+
+            try:
+                unlike_response = requests.post(unlike_url, auth=session.oauth, data=rparams)
+                if unlike_response.status_code == 429:
+                    print('Rate limit exceeded. Stopping unlikes.')
+                    break
+                unlike_response.raise_for_status()
+            except requests.exceptions.RequestException as error:
+                print(f"Error unliking post {post.id}: {error}")
+                continue
+
+            print(f'Post {post.id} unliked successfully.\n(status: {unlike_response.json()['meta']['status']}, msg: {unlike_response.json()['meta']['msg']})\n')
+    else:
+        print('No likes found matching given parameters. 0 posts unliked.')
