@@ -68,16 +68,22 @@ def read_likes(session):
 
     print(f'{len(posts)} like(s) acquired. Printing summaries...\n')
 
+    i = 1
     for post in posts:
-        print(post)
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
 
 def read_drafts(session):
     posts = gather_posts(session)
 
     print(f'{len(posts)} draft(s) acquired. Printing summaries...\n')
 
+    i = 1
     for post in posts:
-        print(post)
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
 
 def unlike_posts(session):
     posts = gather_likes(session)

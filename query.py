@@ -209,7 +209,7 @@ def gather_likes(session):
             append_param_to_url(session, 'before', last_post.timestamp)
             if remaining_count > 20:
                 append_param_to_url(session, 'limit', 20)
-                data = posts_get(session)
+                data = likes_get(session)
                 print(f'[gather_likes] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['liked_posts']:
                     post = Post.get_info(p)
@@ -223,7 +223,7 @@ def gather_likes(session):
                     remaining_count -= 20
             else:
                 append_param_to_url(session, 'limit', remaining_count)
-                data = posts_get(session)
+                data = likes_get(session)
                 print(f'[gather_likes] Posts returned from call: {len(data['response']['liked_posts'])}')
                 for p in data['response']['liked_posts']:
                     post = Post.get_info(p)
