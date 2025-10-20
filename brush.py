@@ -34,6 +34,13 @@ def form_request_url(blog_identifier, target):
 def parse_user_input(qparams, instance):
     append_qparams_to_url(instance, qparams)
 
+def get_instance_details():
+    target = get_target()
+    function = get_function(target)
+    qparams = get_qparams(target)
+
+    return target, function, qparams
+
 def read_posts(instance):
     posts = gather_posts(instance)
 
@@ -92,9 +99,7 @@ def session_instance_run(blog_name, oauth):
             else:
                 print('Invalid input. Try again.')
 
-    target = get_target()
-    function = get_function(target)
-    qparams = get_qparams(target)
+    target, function, qparams = get_instance_details()
     blog_identifier = craft_blog_id(blog_name)
     request_url = form_request_url(blog_identifier, target)
 
@@ -130,16 +135,20 @@ def session_instance_run(blog_name, oauth):
         print('You have chosen to edit posts.\n')
         edit_posts(instance)
 
+    print('Request complete.\n')
+
     valid_user_input = False
     while not valid_user_input:
-        user_input = input('Request complete.\n\nConclude session? Your input (y/n): ')
+        user_input = input('Conclude session? Your input (y/n): ')
         if user_input.lower() == 'y':
             valid_user_input = True
             session_conclude = True
-        if user_input.lower() == 'n':
+        elif user_input.lower() == 'n':
             print('\nGot it. Refreshing session...\n')
             valid_user_input = True
             session_conclude = False
+        else:
+            print('\tError: Invalid input.\n')
 
     return blog_name, session_conclude
 
