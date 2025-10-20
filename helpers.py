@@ -168,15 +168,15 @@ def get_qparams(target):
     qparams = list(qparams)
     return qparams
 
-def get_type(session):
+def get_type(instance):
     type = 'subtweet'
     type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
     while type not in type_options:
         type = input('\tPost type (text, quote, link, answer, video, audio, photo, chat): ')
     print(f'\tYou have chosen {type} as your post type.\n')
-    session.set_type(type)
+    instance.set_type(type)
 
-def get_tags(session):
+def get_tags(instance):
     tag_amount = None
     print('\tHow many tags would you like to specify?')
     while not tag_amount_is_valid(tag_amount):
@@ -191,14 +191,14 @@ def get_tags(session):
         tag = format_tag(tag)
         tags.append(tag)
     print(f'\tYou have selected the following tag(s): {', '.join(tags)}\n')
-    session.set_tags(tags)
+    instance.set_tags(tags)
 
-def get_offset(session):
+def get_offset(instance):
     offset = None
     while offset is None or not offset.isdigit():
         offset = input('\tOffset (post number to start at): ')
     print(f'\tYou have chosen {offset} as your offset.\n')
-    session.set_offset(offset)
+    instance.set_offset(offset)
 
 def convert_to_unix_time(datestring):
     if not datestring:
@@ -215,7 +215,7 @@ def convert_to_unix_time(datestring):
     res = dt.timestamp()
     return int(res)
 
-def get_searchdate(session, date_qp):
+def get_searchdate(instance, date_qp):
     if date_qp == 'b' or date_qp == 'before':
         before = None
         print('\tInput the desired date to search before.\n\t' \
@@ -223,7 +223,7 @@ def get_searchdate(session, date_qp):
         while not datestring_is_valid(before):
             before = input('\tYour entry: ')
         print(f'\tYou have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
-        session.set_before(convert_to_unix_time(before))
+        instance.set_before(convert_to_unix_time(before))
     else:
         after = None
         print('\tInput the desired date to search after.\n\t' \
@@ -231,16 +231,16 @@ def get_searchdate(session, date_qp):
         while not datestring_is_valid(after):
             after = input('\tYour entry: ')
         print(f'\tYou have entered {datestring_to_readable_format(after)} as your desired search-after date.\n')
-        session.set_after(convert_to_unix_time(after))
+        instance.set_after(convert_to_unix_time(after))
     
-def get_limit(session):
+def get_limit(instance):
     limit = None
     while not limit_is_valid(limit):
         limit = input('\tInput limit of posts to alter / read (1-200): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
-    session.set_limit(int(limit))
+    instance.set_limit(int(limit))
 
-def parse_qparams(session, qparams):
+def parse_qparams(instance, qparams):
     none = None
 
     if 'n' in qparams or 'none' in qparams:
@@ -251,29 +251,29 @@ def parse_qparams(session, qparams):
               'If an invalid value is provided, you will be prompted to input the value again.\n')
         for qp in qparams:
             if qp == 't' or qp == 'type':
-                get_type(session)
+                get_type(instance)
             elif qp == 'h' or qp == 'hashtag':
-                get_tags(session)
+                get_tags(instance)
             elif qp == 'o' or qp == 'offset':
-                get_offset(session)
+                get_offset(instance)
             elif qp == 'b' or qp == 'before':
-                get_searchdate(session, qp)
+                get_searchdate(instance, qp)
             elif qp == 'a' or qp == 'after':
-                get_searchdate(session, qp)
+                get_searchdate(instance, qp)
             elif qp == 'l' or qp == 'limit':
-                get_limit(session)
+                get_limit(instance)
 
     return none
 
-def append_type_to_url(session, type):
+def append_type_to_url(instance, type):
     # Also only works if the type has not been added yet
-    request_url = session.request_url
+    request_url = instance.request_url
     request_url += f'/{type.lower()}'
-    session.request_url = request_url
+    instance.request_url = request_url
 
-def append_tags_to_url(session, tags):
+def append_tags_to_url(instance, tags):
     # This one only works if the tags have not been added yet
-    request_url = session.request_url
+    request_url = instance.request_url
 
     if '?' not in request_url:
         sep = '?'
@@ -290,10 +290,10 @@ def append_tags_to_url(session, tags):
 
     # Append to the request URL
     request_url = request_url + sep + tag_query
-    session.request_url = request_url
+    instance.request_url = request_url
 
-def append_param_to_url(session, param_name, param):
-    request_url = session.request_url
+def append_param_to_url(instance, param_name, param):
+    request_url = instance.request_url
     if param_name == 'limit' and param > 20:
         return
     if f'{param_name}=' in request_url:
@@ -312,29 +312,29 @@ def append_param_to_url(session, param_name, param):
         else:
             request_url += f'?{param_name}={param}'
 
-    session.request_url = request_url
+    instance.request_url = request_url
 
-def append_qparams_to_url(session, qparams):
-    none = parse_qparams(session, qparams)
+def append_qparams_to_url(instance, qparams):
+    none = parse_qparams(instance, qparams)
     if not none:
-        type = session.get_param('type')
+        type = instance.get_param('type')
         if type:
-            append_type_to_url(session, type)
-        tags = session.get_param('tags')
+            append_type_to_url(instance, type)
+        tags = instance.get_param('tags')
         if tags:
-            append_tags_to_url(session, tags)
-        offset = session.get_param('offset')
+            append_tags_to_url(instance, tags)
+        offset = instance.get_param('offset')
         if offset:
-            append_param_to_url(session, 'offset', offset)
-        before = session.get_param('before')
+            append_param_to_url(instance, 'offset', offset)
+        before = instance.get_param('before')
         if before:
-            append_param_to_url(session, 'before', before)
-        after = session.get_param('after')
+            append_param_to_url(instance, 'before', before)
+        after = instance.get_param('after')
         if after:
-            append_param_to_url(session, 'after', after)
-        limit = session.get_param('limit')
+            append_param_to_url(instance, 'after', after)
+        limit = instance.get_param('limit')
         if limit:
-            append_param_to_url(session, 'limit', limit)
+            append_param_to_url(instance, 'limit', limit)
 
 def get_edit_info():
     valid_fxn = False
@@ -355,7 +355,6 @@ def get_edit_info():
         if not ',' in tag:
             valid_tag = True
     return function, tag
-
 
 def edit_tags_list(function, tags, tag):
     if function == 'd' or function == 'delete':

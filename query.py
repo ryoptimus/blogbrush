@@ -4,11 +4,11 @@ from post import Post
 from helpers import append_param_to_url, get_edit_info, edit_tags_list
 
 # GET function for posts and drafts
-def posts_get(session):
+def posts_get(instance):
     # Get posts / drafts
-    print(f'[query_posts_get] Request URL: {session.request_url}')
+    print(f'[query_posts_get] Request URL: {instance.request_url}')
     try:
-        response = requests.get(session.request_url, auth=session.oauth)
+        response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -26,8 +26,8 @@ def posts_get(session):
         print(f'Error parsing JSON: {error}')
         return
     
-def gather_posts(session):
-    data = posts_get(session)
+def gather_posts(instance):
+    data = posts_get(instance)
 
     if not data:
         return []
@@ -40,17 +40,17 @@ def gather_posts(session):
             posts.append(post)
             seen_ids.add(post.id)
 
-    limit = session.get_param('limit')
+    limit = instance.get_param('limit')
     if limit and limit > 20:
         print('[gather_posts] Greedy. Want more posts, do you?\n')
         remaining_count = limit - 20
         print(f'[gather_posts] Looks like... {remaining_count} more, hm?')
         while remaining_count > 0:
             last_post = posts[-1]
-            append_param_to_url(session, 'before', last_post.timestamp)
+            append_param_to_url(instance, 'before', last_post.timestamp)
             if remaining_count > 20:
-                append_param_to_url(session, 'limit', 20)
-                data = posts_get(session)
+                append_param_to_url(instance, 'limit', 20)
+                data = posts_get(instance)
                 print(f'[gather_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
@@ -63,8 +63,8 @@ def gather_posts(session):
                 else:
                     remaining_count -= 20
             else:
-                append_param_to_url(session, 'limit', remaining_count)
-                data = posts_get(session)
+                append_param_to_url(instance, 'limit', remaining_count)
+                data = posts_get(instance)
                 print(f'[gather_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
@@ -74,7 +74,7 @@ def gather_posts(session):
 
                 remaining_count = 0
     print(f'[gather_posts] seen_ids set has {len(seen_ids)} elements.')
-    if session.target.lower() == 'p' or session.target.lower() == 'posts':
+    if instance.target.lower() == 'p' or instance.target.lower() == 'posts':
         target = 'post'
     else:
         target = 'draft'
@@ -84,15 +84,15 @@ def gather_posts(session):
         print(f'{limit} {target}(s) successfully found!\n')
     return posts
 
-def edit_post_legacy(session, post, new_tags):
-    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/edit'
+def edit_post_legacy(instance, post, new_tags):
+    edit_url = f'https://api.tumblr.com/v2/blog/{instance.blog_identifier}/post/edit'
 
     payload = {
         'id': post.id, 
         'tags': ','.join(new_tags)
     }
     try:
-        edit_response = requests.post(edit_url, auth=session.oauth, data=payload)
+        edit_response = requests.post(edit_url, auth=instance.oauth, data=payload)
         if edit_response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -101,8 +101,8 @@ def edit_post_legacy(session, post, new_tags):
         print(f'Error editing post {post.id}: {error}')
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
  
-def edit_post_npf(session, post, new_tags):
-    edit_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/posts/{post.id}'
+def edit_post_npf(instance, post, new_tags):
+    edit_url = f'https://api.tumblr.com/v2/blog/{instance.blog_identifier}/posts/{post.id}'
     payload = {
         'tags': new_tags,
     }
@@ -113,7 +113,7 @@ def edit_post_npf(session, post, new_tags):
     }
 
     try:
-        edit_response = requests.put(edit_url, auth=session.oauth, json=payload, headers=headers)
+        edit_response = requests.put(edit_url, auth=instance.oauth, json=payload, headers=headers)
         if edit_response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -123,11 +123,11 @@ def edit_post_npf(session, post, new_tags):
     
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
 
-def edit_posts(session):
-    posts = gather_posts(session)
+def edit_posts(instance):
+    posts = gather_posts(instance)
     function, tag = get_edit_info()
 
-    print(f'Request URL: {session.request_url}')
+    print(f'Request URL: {instance.request_url}')
 
     if posts:
         print(f'{len(posts)} post(s) acquired.\n')
@@ -141,16 +141,16 @@ def edit_posts(session):
                 print('Yikes. You didn\'t add OR delete anything. What\'s the matter with you?')
                 continue
             if post.format == 'legacy':
-                edit_post_legacy(session, post, new_tags)
+                edit_post_legacy(instance, post, new_tags)
             else:
-                edit_post_npf(session, post, new_tags)
+                edit_post_npf(instance, post, new_tags)
     else:
         print('No posts found matching given parameters. 0 posts edited.')
 
-def delete_posts(session):
-    posts = gather_posts(session)
+def delete_posts(instance):
+    posts = gather_posts(instance)
 
-    # print(f'Request URL: {session.request_url}')
+    # print(f'Request URL: {instance.request_url}')
 
     if posts:
         print(f'{len(posts)} post(s) acquired. Deleting...\n')
@@ -158,13 +158,13 @@ def delete_posts(session):
         for post in posts:
             print(f'Post {i}: {post}\n')
             i += 1
-            delete_url = f'https://api.tumblr.com/v2/blog/{session.blog_identifier}/post/delete'
+            delete_url = f'https://api.tumblr.com/v2/blog/{instance.blog_identifier}/post/delete'
             rparams = {
                 'id': post.id
             }
 
             try:
-                del_response = requests.post(delete_url, auth=session.oauth, data=rparams)
+                del_response = requests.post(delete_url, auth=instance.oauth, data=rparams)
 
                 if del_response.status_code == 429:
                     print('Rate limit exceeded. Stopping deletions.')
@@ -179,9 +179,9 @@ def delete_posts(session):
     else:
         print('No posts found matching given parameters. 0 posts deleted.')
 
-def q_posts_get(session):
+def q_posts_get(instance):
     try:
-        response = requests.get(session.request_url, auth=session.oauth)
+        response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -198,8 +198,8 @@ def q_posts_get(session):
         print(f'Error parsing JSON: {error}')
         return
 
-def gather_q_posts(session):
-    data = q_posts_get(session)
+def gather_q_posts(instance):
+    data = q_posts_get(instance)
 
     if not data:
         return []
@@ -212,21 +212,21 @@ def gather_q_posts(session):
             posts.append(post)
             seen_ids.add(post.id)
 
-    offset = session.get_param('offset')
+    offset = instance.get_param('offset')
     if not offset:
         offset = 0
-    limit = session.get_param('limit')
+    limit = instance.get_param('limit')
     if limit and limit > 20:
         print('[gather_q_posts] Greedy. Want more posts, do you?\n')
         remaining_count = limit - 20
         print(f'[gather_q_posts] Looks like... {remaining_count} more, hm?')
         while remaining_count > 0:
             offset = len(posts)
-            append_param_to_url(session, 'offset', offset)
+            append_param_to_url(instance, 'offset', offset)
             print(f'Offset is now {offset}.')
             if remaining_count > 20:
-                append_param_to_url(session, 'limit', 20)
-                data = q_posts_get(session)
+                append_param_to_url(instance, 'limit', 20)
+                data = q_posts_get(instance)
                 print(f'[gather_q_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
@@ -239,8 +239,8 @@ def gather_q_posts(session):
                 else:
                     remaining_count -= 20
             else:
-                append_param_to_url(session, 'limit', remaining_count)
-                data = q_posts_get(session)
+                append_param_to_url(instance, 'limit', remaining_count)
+                data = q_posts_get(instance)
                 print(f'[gather_q_posts] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['posts']:
                     post = Post.get_info(p)
@@ -260,10 +260,10 @@ def gather_q_posts(session):
     return posts
 
 # GET function for likes   
-def likes_get(session):
+def likes_get(instance):
     # Get likes
     try:
-        response = requests.get(session.request_url, auth=session.oauth)
+        response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -281,8 +281,8 @@ def likes_get(session):
         print(f'Error parsing JSON: {error}')
         return
     
-def gather_likes(session):
-    data = likes_get(session)
+def gather_likes(instance):
+    data = likes_get(instance)
 
     if not data:
         return []
@@ -294,17 +294,17 @@ def gather_likes(session):
         posts.append(post)
         seen_ids.add(post.id)
 
-    limit = session.get_param('limit')
+    limit = instance.get_param('limit')
     if limit and limit > 20:
         print('[gather_likes] Greedy. Want more posts, do you?\n')
         remaining_count = limit - 20
         print(f'[gather_likes] Looks like... {remaining_count} more, hm?')
         while remaining_count > 0:
             last_post = posts[-1]
-            append_param_to_url(session, 'before', last_post.timestamp)
+            append_param_to_url(instance, 'before', last_post.timestamp)
             if remaining_count > 20:
-                append_param_to_url(session, 'limit', 20)
-                data = likes_get(session)
+                append_param_to_url(instance, 'limit', 20)
+                data = likes_get(instance)
                 print(f'[gather_likes] Posts returned from call: {len(data['response']['posts'])}')
                 for p in data['response']['liked_posts']:
                     post = Post.get_info(p)
@@ -317,8 +317,8 @@ def gather_likes(session):
                 else:
                     remaining_count -= 20
             else:
-                append_param_to_url(session, 'limit', remaining_count)
-                data = likes_get(session)
+                append_param_to_url(instance, 'limit', remaining_count)
+                data = likes_get(instance)
                 print(f'[gather_likes] Posts returned from call: {len(data['response']['liked_posts'])}')
                 for p in data['response']['liked_posts']:
                     post = Post.get_info(p)
@@ -334,8 +334,8 @@ def gather_likes(session):
         print(f'{limit} liked post(s) successfully found!\n')
     return posts
 
-def unlike_posts(session):
-    posts = gather_likes(session)
+def unlike_posts(instance):
+    posts = gather_likes(instance)
     
     print(f'{len(posts)} like(s) acquired. Unliking...\n')
 
@@ -349,7 +349,7 @@ def unlike_posts(session):
             }
 
             try:
-                unlike_response = requests.post(unlike_url, auth=session.oauth, data=rparams)
+                unlike_response = requests.post(unlike_url, auth=instance.oauth, data=rparams)
                 if unlike_response.status_code == 429:
                     print('Rate limit exceeded. Stopping unlikes.')
                     break

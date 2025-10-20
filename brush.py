@@ -4,7 +4,7 @@ import json
 import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
-from instance import Session
+from instance import Instance
 from query import gather_posts, edit_posts, delete_posts, gather_q_posts, gather_likes, unlike_posts
 from helpers import (
     get_blog_name, craft_blog_id, get_target, get_function, get_qparams, append_qparams_to_url
@@ -31,11 +31,11 @@ def form_request_url(blog_identifier, target):
 
     return request_url
 
-def parse_user_input(qparams, session):
-    append_qparams_to_url(session, qparams)
+def parse_user_input(qparams, instance):
+    append_qparams_to_url(instance, qparams)
 
-def read_posts(session):
-    posts = gather_posts(session)
+def read_posts(instance):
+    posts = gather_posts(instance)
 
     print(f'{len(posts)} post(s) acquired. Printing summaries...\n')
 
@@ -45,18 +45,18 @@ def read_posts(session):
         # print(post)
         i += 1
 
-def read_q_posts(session):
-    posts = gather_q_posts(session)
+def read_q_posts(instance):
+    posts = gather_q_posts(instance)
     i = 1
     for post in posts:
         print(f'Post {i}: {post}\n')
         # print(post)
         i += 1
 
-def read_likes(session):
-    posts = gather_likes(session)
+def read_likes(instance):
+    posts = gather_likes(instance)
 
-    print(f'Request URL: {session.request_url}')
+    print(f'Request URL: {instance.request_url}')
 
     print(f'{len(posts)} like(s) acquired. Printing summaries...\n')
 
@@ -66,8 +66,8 @@ def read_likes(session):
         # print(post)
         i += 1
 
-def read_drafts(session):
-    posts = gather_posts(session)
+def read_drafts(instance):
+    posts = gather_posts(instance)
 
     print(f'{len(posts)} draft(s) acquired. Printing summaries...\n')
 
@@ -98,37 +98,37 @@ def session_instance_run(blog_name, oauth):
     blog_identifier = craft_blog_id(blog_name)
     request_url = form_request_url(blog_identifier, target)
 
-    session = Session(
+    instance = Instance(
         blog_identifier = blog_identifier,
         request_url = request_url,
         oauth = oauth,
         target = target
     )
 
-    parse_user_input(qparams, session)
+    parse_user_input(qparams, instance)
 
     if function == 'r' or function == 'read':
         if target == 'p' or target == 'posts':
             print('You have chosen to read posts.\n')
-            read_posts(session)
+            read_posts(instance)
         elif target == 'q' or target == 'qposts':
             print('Let\'s read some queued posts.')
-            read_q_posts(session)
+            read_q_posts(instance)
         elif target == 'l' or target == 'likes':
             print('You have chosen to read likes.\n')
-            read_likes(session)
+            read_likes(instance)
         else:
             # print('You have chosen to read drafts.')
-            read_drafts(session)
+            read_drafts(instance)
     elif function == 'd' or function == 'delete':
         print('You have chosen to delete posts.\n')
-        delete_posts(session)
+        delete_posts(instance)
     elif function == 'u' or function == 'unlike':
         print('You have chosen to unlike posts.\n')
-        unlike_posts(session)
+        unlike_posts(instance)
     else:
         print('You have chosen to edit posts.\n')
-        edit_posts(session)
+        edit_posts(instance)
 
     valid_user_input = False
     while not valid_user_input:

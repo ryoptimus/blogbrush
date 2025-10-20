@@ -6,7 +6,7 @@ from requests_oauthlib import OAuth1
 # API_VERSION = 'v2'
 
 @dataclass
-class Session:
+class Instance:
     blog_identifier: str    # Required
     request_url: str
     oauth: OAuth1   # Required (for now)
