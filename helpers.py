@@ -297,15 +297,15 @@ def append_param_to_url(instance, param_name, param):
     if param_name == 'limit' and param > 20:
         return
     if f'{param_name}=' in request_url:
-        base, query = request_url.split("?", 1)
-        parts = query.split("&")
+        base, query = request_url.split('?', 1)
+        parts = query.split('&')
 
         for i, p in enumerate(parts):
             if p.startswith(f'{param_name}='):
                 parts[i] = f'{param_name}={param}'
                 break
 
-        request_url = base + "?" + "&".join(parts)
+        request_url = base + '?' + '&'.join(parts)
     else:
         if '?' in request_url:
             request_url += f'&{param_name}={param}'
