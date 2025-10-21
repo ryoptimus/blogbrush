@@ -1,4 +1,5 @@
 import re
+import json
 import datetime
 
 from validator import (
@@ -366,3 +367,10 @@ def edit_tags_list(function, tags, tag):
     else:
         tags.append(tag)
         return tags
+    
+def pretty_print_response(resp):
+    print(f'Status: {resp.status_code}')
+    try:
+        print(json.dumps(resp.json(), indent=4))
+    except ValueError:
+        print(resp.text)

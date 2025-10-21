@@ -1,7 +1,7 @@
 import json
 import requests
 from post import Post
-from helpers import append_param_to_url, get_edit_info, edit_tags_list
+from helpers import append_param_to_url, get_edit_info, edit_tags_list, pretty_print_response
 
 API_BASE = 'https://api.tumblr.com'
 API_VERSION = 'v2'
@@ -14,6 +14,7 @@ def posts_get(instance):
         response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
             print('Rate limit exceeded.')
+            pretty_print_response(response)
             return
         response.raise_for_status()
         
@@ -171,6 +172,7 @@ def delete_posts(instance):
 
                 if del_response.status_code == 429:
                     print('Rate limit exceeded. Stopping deletions.')
+                    pretty_print_response(del_response)
                     break
 
                 del_response.raise_for_status()
