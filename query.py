@@ -6,6 +6,8 @@ from helpers import append_param_to_url, get_edit_info, edit_tags_list, pretty_p
 API_BASE = 'https://api.tumblr.com'
 API_VERSION = 'v2'
 
+# Retrieve published posts for a given blog /posts
+# Authentication: API key
 # GET function for posts and drafts
 def posts_get(instance):
     # Get posts / drafts
@@ -88,6 +90,7 @@ def gather_posts(instance):
         print(f'{limit} {target}(s) successfully found!\n')
     return posts
 
+# Authentication: OAuth
 def edit_post_legacy(instance, post, new_tags):
     edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/edit'
 
@@ -105,6 +108,7 @@ def edit_post_legacy(instance, post, new_tags):
         print(f'Error editing post {post.id}: {error}')
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
  
+ # Authentication: OAuth
 def edit_post_npf(instance, post, new_tags):
     edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/posts/{post.id}'
     payload = {
@@ -151,6 +155,7 @@ def edit_posts(instance):
     else:
         print('No posts found matching given parameters. 0 posts edited.')
 
+# Authentication: OAuth
 def delete_posts(instance):
     posts = gather_posts(instance)
 
@@ -184,6 +189,7 @@ def delete_posts(instance):
     else:
         print('No posts found matching given parameters. 0 posts deleted.')
 
+# Authentication: OAuth
 def q_posts_get(instance):
     try:
         response = requests.get(instance.request_url, auth=instance.oauth)
@@ -264,6 +270,8 @@ def gather_q_posts(instance):
     # print(f'[gather_q_posts] seen_ids set has {len(seen_ids)} elements.')
     return posts
 
+# Retrieve a blog's liked posts
+# Authentication: API key
 # GET function for likes   
 def likes_get(instance):
     # Get likes
@@ -339,6 +347,7 @@ def gather_likes(instance):
         print(f'{limit} liked post(s) successfully found!\n')
     return posts
 
+# Authentication: OAuth
 def unlike_posts(instance):
     posts = gather_likes(instance)
     
