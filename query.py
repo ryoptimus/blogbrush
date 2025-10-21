@@ -3,6 +3,9 @@ import requests
 from post import Post
 from helpers import append_param_to_url, get_edit_info, edit_tags_list
 
+API_BASE = 'https://api.tumblr.com'
+API_VERSION = 'v2'
+
 # GET function for posts and drafts
 def posts_get(instance):
     # Get posts / drafts
@@ -85,7 +88,7 @@ def gather_posts(instance):
     return posts
 
 def edit_post_legacy(instance, post, new_tags):
-    edit_url = f'https://api.tumblr.com/v2/blog/{instance.blog_identifier}/post/edit'
+    edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/edit'
 
     payload = {
         'id': post.id, 
@@ -102,7 +105,7 @@ def edit_post_legacy(instance, post, new_tags):
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
  
 def edit_post_npf(instance, post, new_tags):
-    edit_url = f'https://api.tumblr.com/v2/blog/{instance.blog_identifier}/posts/{post.id}'
+    edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/posts/{post.id}'
     payload = {
         'tags': new_tags,
     }
@@ -158,7 +161,7 @@ def delete_posts(instance):
         for post in posts:
             print(f'Post {i}: {post}\n')
             i += 1
-            delete_url = f'https://api.tumblr.com/v2/blog/{instance.blog_identifier}/post/delete'
+            delete_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/delete'
             rparams = {
                 'id': post.id
             }
@@ -342,7 +345,7 @@ def unlike_posts(instance):
     if posts:
         for post in posts:
             print(post)
-            unlike_url = f'https://api.tumblr.com/v2/user/unlike'
+            unlike_url = f'{API_BASE}/{API_VERSION}/user/unlike'
             rparams = {
                 'id': post.id,
                 'reblog_key': post.reblog_key

@@ -17,9 +17,12 @@ consumer_secret = os.getenv('CONSUMER_SECRET')
 token = os.getenv('TOKEN')
 token_secret = os.getenv('TOKEN_SECRET')
 
+API_BASE = 'https://api.tumblr.com'
+API_VERSION = 'v2'
+
 def form_request_url(blog_identifier, target):
     # Construct the API URL
-    api_url = f'https://api.tumblr.com/v2/blog/{blog_identifier}'
+    api_url = f'{API_BASE}/{API_VERSION}/blog/{blog_identifier}'
     if target.lower() == 'p' or target.lower() == 'posts':
         request_url = api_url + '/posts'
     elif target.lower() == 'q' or target.lower() == 'qposts':
