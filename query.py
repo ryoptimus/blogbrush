@@ -115,13 +115,15 @@ def read_drafts(instance):
 # Authentication: OAuth
 def edit_post_legacy(instance, post, new_tags):
     edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/edit'
+    instance.request_url = edit_url
 
     payload = {
         'id': post.id, 
         'tags': ','.join(new_tags)
     }
+
     try:
-        edit_response = requests.post(edit_url, auth=instance.oauth, data=payload)
+        edit_response = requests.post(instance.request_url, auth=instance.oauth, data=payload)
         if edit_response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -133,6 +135,8 @@ def edit_post_legacy(instance, post, new_tags):
  # Authentication: OAuth
 def edit_post_npf(instance, post, new_tags):
     edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/posts/{post.id}'
+    instance.request_url = edit_url
+
     payload = {
         'tags': new_tags,
     }
@@ -143,7 +147,7 @@ def edit_post_npf(instance, post, new_tags):
     }
 
     try:
-        edit_response = requests.put(edit_url, auth=instance.oauth, json=payload, headers=headers)
+        edit_response = requests.put(instance.request_url, auth=instance.oauth, json=payload, headers=headers)
         if edit_response.status_code == 429:
             print('Rate limit exceeded.')
             return
@@ -181,6 +185,9 @@ def edit_posts(instance):
 def delete_posts(instance):
     posts = gather_posts(instance)
 
+    delete_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/delete'
+    instance.request_url = delete_url
+
     # print(f'Request URL: {instance.request_url}')
 
     if posts:
@@ -189,13 +196,13 @@ def delete_posts(instance):
         for post in posts:
             print(f'Post {i}: {post}\n')
             i += 1
-            delete_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/delete'
+            
             rparams = {
                 'id': post.id
             }
 
             try:
-                del_response = requests.post(delete_url, auth=instance.oauth, data=rparams)
+                del_response = requests.post(instance.request_url, auth=instance.oauth, data=rparams)
 
                 if del_response.status_code == 429:
                     print('Rate limit exceeded. Stopping deletions.')
@@ -396,17 +403,20 @@ def unlike_posts(instance):
     
     print(f'{len(posts)} like(s) acquired. Unliking...\n')
 
+    unlike_url = f'{API_BASE}/{API_VERSION}/user/unlike'
+    instance.request_url = unlike_url
+
     if posts:
         for post in posts:
             print(post)
-            unlike_url = f'{API_BASE}/{API_VERSION}/user/unlike'
+            
             rparams = {
                 'id': post.id,
                 'reblog_key': post.reblog_key
             }
 
             try:
-                unlike_response = requests.post(unlike_url, auth=instance.oauth, data=rparams)
+                unlike_response = requests.post(instance.request_url, auth=instance.oauth, data=rparams)
                 if unlike_response.status_code == 429:
                     print('Rate limit exceeded. Stopping unlikes.')
                     break

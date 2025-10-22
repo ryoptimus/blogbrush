@@ -46,7 +46,7 @@ def session_instance_create(blog_name, oauth):
     else:
         valid_user_input = False
         while not valid_user_input:
-            user_input = input(f'Target blog name is currently \'{blog_name}\'. Please confirm (y/n): ')
+            user_input = input(f'Target blog name is currently \'{blog_name}\'! Please confirm (y/n): ')
             if user_input.lower() == 'y':
                 valid_user_input = True
             elif user_input.lower() == 'n':
