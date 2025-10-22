@@ -90,6 +90,28 @@ def gather_posts(instance):
         print(f'{limit} {target}(s) successfully found!\n')
     return posts
 
+def read_posts(instance):
+    posts = gather_posts(instance)
+
+    print(f'{len(posts)} post(s) acquired. Printing summaries...\n')
+
+    i = 1
+    for post in posts:
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
+
+def read_drafts(instance):
+    posts = gather_posts(instance)
+
+    print(f'{len(posts)} draft(s) acquired. Printing summaries...\n')
+
+    i = 1
+    for post in posts:
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
+
 # Authentication: OAuth
 def edit_post_legacy(instance, post, new_tags):
     edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/post/edit'
@@ -270,6 +292,14 @@ def gather_q_posts(instance):
     # print(f'[gather_q_posts] seen_ids set has {len(seen_ids)} elements.')
     return posts
 
+def read_q_posts(instance):
+    posts = gather_q_posts(instance)
+    i = 1
+    for post in posts:
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
+
 # Retrieve a blog's liked posts
 # Authentication: API key
 # GET function for likes   
@@ -346,6 +376,19 @@ def gather_likes(instance):
     else:
         print(f'{limit} liked post(s) successfully found!\n')
     return posts
+
+def read_likes(instance):
+    posts = gather_likes(instance)
+
+    print(f'Request URL: {instance.request_url}')
+
+    print(f'{len(posts)} like(s) acquired. Printing summaries...\n')
+
+    i = 1
+    for post in posts:
+        print(f'Post {i}: {post}\n')
+        # print(post)
+        i += 1
 
 # Authentication: OAuth
 def unlike_posts(instance):
