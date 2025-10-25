@@ -136,7 +136,7 @@ def get_qparams(target):
         'Offset (o, offset): post number to start at (0 is the first post)\n\t' \
         'Before (b, before): returns posts published before a specified timestamp\n\t' \
         'After (a, after): returns posts published before a specified timestamp\n\t' \
-        'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
+        'Limit (l, limit): the number of results to return (1–260, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
         'Your selection should be a string of characters separated by spaces.\n\t\t' \
         'e.g., \'o l\' OR \'offset limit\' to indicate you wish to specify offset and limit\n\n\t' \
@@ -144,7 +144,7 @@ def get_qparams(target):
     elif target.lower() == 'q' or target.lower() == 'qposts':
         input_prompt = '\nWhat query parameter would you like to specify?\n\t' \
         'Offset (o, offset): post number to start at (0 is the first post)\n\t' \
-        'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
+        'Limit (l, limit): the number of results to return (1–260, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
         'e.g., \'o l\' OR \'offset limit\' to indicate you wish to specify offset and limit\n\n\t' \
         'Selection: '
@@ -153,7 +153,7 @@ def get_qparams(target):
         'Offset (o, offset): post number to start at (1,000 max)\n\t' \
         'Before (b, before): returns posts liked before a specified timestamp\n\t' \
         'After (a, after): returns posts liked before a specified timestamp\n\t' \
-        'Limit (l, limit): the number of results to return (1–200, inclusive)\n\t' \
+        'Limit (l, limit): the number of results to return (1–260, inclusive)\n\t' \
         'None (n, none): indicates no selection\n\n\t' \
         'Your selection should be a string of characters separated by spaces.\n\t\t' \
         'e.g., \'o l\' OR \'offset limit\' to indicate you wish to specify offset and limit\n\n\t' \
@@ -237,7 +237,7 @@ def get_searchdate(instance, date_qp):
 def get_limit(instance):
     limit = None
     while not limit_is_valid(limit):
-        limit = input('\tInput limit of posts to alter / read (1-200): ')
+        limit = input('\tInput limit of posts to alter / read (1-260): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
     instance.set_limit(int(limit))
 

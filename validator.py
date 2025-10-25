@@ -83,6 +83,6 @@ def limit_is_valid(limit):
     if not limit.isdigit():
         return False
     limit_int = int(limit)
-    if limit_int < 1 or limit_int > 200:
+    if limit_int < 1 or limit_int > 260:
         return False
     return True
