@@ -50,6 +50,7 @@ class Instance:
     
     def init_stats(self):
         self.stats['calls'] = 0
+        self.stats['errors'] = 0
         self.stats['fetched'] = 0
         self.stats['read'] = 0
         self.stats['unliked'] = 0
@@ -58,8 +59,9 @@ class Instance:
     
     def print_stats(self):
         instance_summary = f'INSTANCE SUMMARY\n' \
-        '------------------------\n' \
+        '---------------------\n' \
         f'API calls: {self.stats['calls']}\n' \
+        f'Errors: {self.stats['errors']}\n' \
         f'Posts fetched: {self.stats['fetched']}\n'
 
         if self.stats['read'] != 0:

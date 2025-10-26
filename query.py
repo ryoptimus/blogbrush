@@ -15,13 +15,15 @@ def posts_get(instance):
     try:
         response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
+            instance.stats['errors'] += 1
             print('Rate limit exceeded.')
-            pretty_print_response(response)
+            # pretty_print_response(response)
             return
         instance.stats['calls'] += 1
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
+        instance.stats['errors'] += 1
         print(f'Error: {error}')
 
     # Parse JSON
@@ -131,12 +133,14 @@ def edit_post_legacy(instance, post, new_tags):
     try:
         edit_response = requests.post(instance.request_url, auth=instance.oauth, data=payload)
         if edit_response.status_code == 429:
+            instance.stats['errors'] += 1
             print('Rate limit exceeded.')
             return
         instance.stats['calls'] += 1
         instance.stats['edited'] += 1
         edit_response.raise_for_status()
     except requests.exceptions.RequestException as error:
+        instance.stats['errors'] += 1
         print(f'Error editing post {post.id}: {error}')
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
  
@@ -157,12 +161,14 @@ def edit_post_npf(instance, post, new_tags):
     try:
         edit_response = requests.put(instance.request_url, auth=instance.oauth, json=payload, headers=headers)
         if edit_response.status_code == 429:
+            instance.stats['errors'] += 1
             print('Rate limit exceeded.')
             return
         instance.stats['calls'] += 1
         instance.stats['edited'] += 1
         edit_response.raise_for_status()
     except requests.exceptions.RequestException as error:
+        instance.stats['errors'] += 1
         print(f'Error editing post {post.id}: {error}')
     
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
@@ -215,13 +221,15 @@ def delete_posts(instance):
                 del_response = requests.post(instance.request_url, auth=instance.oauth, data=rparams)
 
                 if del_response.status_code == 429:
+                    instance.stats['errors'] += 1
                     print('Rate limit exceeded. Stopping deletions.')
-                    pretty_print_response(del_response)
+                    # pretty_print_response(del_response)
                     break
                 instance.stats['calls'] += 1
                 instance.stats['deleted'] += 1
                 del_response.raise_for_status()
             except requests.exceptions.RequestException as error:
+                instance.stats['errors'] += 1
                 print(f'Error deleting post {post.id}: {error}')
                 continue
 
@@ -234,11 +242,13 @@ def q_posts_get(instance):
     try:
         response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
+            instance.stats['errors'] += 1
             print('Rate limit exceeded.')
             return
         instance.stats['calls'] += 1
         response.raise_for_status()
     except requests.exceptions.RequestException as error:
+        instance.stats['errors'] += 1
         print(f'Error: {error}')
 
     # Parse JSON
@@ -332,12 +342,14 @@ def likes_get(instance):
     try:
         response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
+            instance.stats['errors'] += 1
             print('Rate limit exceeded.')
             return
         instance.stats['calls'] += 1
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
+        instance.stats['errors'] += 1
         print(f'Error: {error}')
 
     # Parse JSON
@@ -440,11 +452,13 @@ def unlike_posts(instance):
             try:
                 unlike_response = requests.post(instance.request_url, auth=instance.oauth, data=rparams)
                 if unlike_response.status_code == 429:
+                    instance.stats['errors'] += 1
                     print('Rate limit exceeded. Stopping unlikes.')
                     break
                 instance.stats['unliked'] += 1
                 unlike_response.raise_for_status()
             except requests.exceptions.RequestException as error:
+                instance.stats['errors'] += 1
                 print(f"Error unliking post {post.id}: {error}")
                 continue
 
