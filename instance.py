@@ -15,6 +15,7 @@ class Instance:
     target: str = 'posts'   # Set a default
     function: str = 'read'
     params: Dict[str, object] = field(default_factory=dict)
+    stats: Dict[str, int] = field(default_factory=dict)
 
     def set_limit(self, limit: int):
         self.params['limit'] = limit
@@ -46,6 +47,31 @@ class Instance:
             return param
         else:
             return None
+    
+    def init_stats(self):
+        self.stats['calls'] = 0
+        self.stats['fetched'] = 0
+        self.stats['read'] = 0
+        self.stats['unliked'] = 0
+        self.stats['deleted'] = 0
+        self.stats['edited'] = 0
+    
+    def print_stats(self):
+        instance_summary = f'INSTANCE SUMMARY\n' \
+        '------------------------\n' \
+        f'API calls: {self.stats['calls']}\n' \
+        f'Posts fetched: {self.stats['fetched']}\n'
+
+        if self.stats['read'] != 0:
+            instance_summary += f'Posts read: {self.stats['read']}\n'
+        if self.stats['unliked'] != 0:
+            instance_summary += f'Posts unliked: {self.stats['unliked']}\n'
+        if self.stats['deleted'] != 0:
+            instance_summary += f'Posts deleted: {self.stats['deleted']}\n'
+        if self.stats['edited'] != 0:
+            instance_summary += f'Posts edited: {self.stats['edited']}\n'
+
+        print(instance_summary)
         
     def run(self, qparams):
         append_qparams_to_url(self, qparams)

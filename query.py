@@ -18,6 +18,7 @@ def posts_get(instance):
             print('Rate limit exceeded.')
             pretty_print_response(response)
             return
+        instance.stats['calls'] += 1
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
@@ -88,12 +89,16 @@ def gather_posts(instance):
         print(f'Despite the provided limit of {limit}, only {len(posts)} {target}(s) were found.\n')
     else:
         print(f'{limit} {target}(s) successfully found!\n')
+
+    instance.stats['fetched'] += len(posts)
+
     return posts
 
 def read_posts(instance):
     posts = gather_posts(instance)
 
     print(f'{len(posts)} post(s) acquired. Printing summaries...\n')
+    instance.stats['read'] += len(posts)
 
     i = 1
     for post in posts:
@@ -105,6 +110,7 @@ def read_drafts(instance):
     posts = gather_posts(instance)
 
     print(f'{len(posts)} draft(s) acquired. Printing summaries...\n')
+    instance.stats['read'] += len(posts)
 
     i = 1
     for post in posts:
@@ -127,6 +133,8 @@ def edit_post_legacy(instance, post, new_tags):
         if edit_response.status_code == 429:
             print('Rate limit exceeded.')
             return
+        instance.stats['calls'] += 1
+        instance.stats['edited'] += 1
         edit_response.raise_for_status()
     except requests.exceptions.RequestException as error:
         print(f'Error editing post {post.id}: {error}')
@@ -151,6 +159,8 @@ def edit_post_npf(instance, post, new_tags):
         if edit_response.status_code == 429:
             print('Rate limit exceeded.')
             return
+        instance.stats['calls'] += 1
+        instance.stats['edited'] += 1
         edit_response.raise_for_status()
     except requests.exceptions.RequestException as error:
         print(f'Error editing post {post.id}: {error}')
@@ -208,7 +218,8 @@ def delete_posts(instance):
                     print('Rate limit exceeded. Stopping deletions.')
                     pretty_print_response(del_response)
                     break
-
+                instance.stats['calls'] += 1
+                instance.stats['deleted'] += 1
                 del_response.raise_for_status()
             except requests.exceptions.RequestException as error:
                 print(f'Error deleting post {post.id}: {error}')
@@ -225,6 +236,7 @@ def q_posts_get(instance):
         if response.status_code == 429:
             print('Rate limit exceeded.')
             return
+        instance.stats['calls'] += 1
         response.raise_for_status()
     except requests.exceptions.RequestException as error:
         print(f'Error: {error}')
@@ -295,12 +307,17 @@ def gather_q_posts(instance):
     else:
         print(f'{limit} queued post(s) successfully found!\n')
 
+    instance.stats['fetched'] += len(posts)
+
     # print(f'[gather_q_posts] posts list has {len(posts)} elements.')
     # print(f'[gather_q_posts] seen_ids set has {len(seen_ids)} elements.')
     return posts
 
 def read_q_posts(instance):
     posts = gather_q_posts(instance)
+
+    instance.stats['read'] += len(posts)
+
     i = 1
     for post in posts:
         print(f'Post {i}: {post}\n')
@@ -317,6 +334,7 @@ def likes_get(instance):
         if response.status_code == 429:
             print('Rate limit exceeded.')
             return
+        instance.stats['calls'] += 1
         response.raise_for_status()
         
     except requests.exceptions.RequestException as error:
@@ -382,6 +400,9 @@ def gather_likes(instance):
         print(f'Despite provided limit of {limit}, only {len(posts)} liked posts were found.\n')
     else:
         print(f'{limit} liked post(s) successfully found!\n')
+
+    instance.stats['fetched'] += len(posts)
+    
     return posts
 
 def read_likes(instance):
@@ -390,6 +411,7 @@ def read_likes(instance):
     print(f'Request URL: {instance.request_url}')
 
     print(f'{len(posts)} like(s) acquired. Printing summaries...\n')
+    instance.stats['read'] += len(posts)
 
     i = 1
     for post in posts:
@@ -420,6 +442,7 @@ def unlike_posts(instance):
                 if unlike_response.status_code == 429:
                     print('Rate limit exceeded. Stopping unlikes.')
                     break
+                instance.stats['unliked'] += 1
                 unlike_response.raise_for_status()
             except requests.exceptions.RequestException as error:
                 print(f"Error unliking post {post.id}: {error}")
