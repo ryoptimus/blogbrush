@@ -12,11 +12,16 @@ API_VERSION = 'v2'
 def posts_get(instance):
     # Get posts / drafts
     print(f'[query_posts_get] Request URL: {instance.request_url}')
+
+    # Check: Is first call? If yes, start timer
+    if not instance.started:
+        instance.start_timer()
+
     try:
         response = requests.get(instance.request_url, auth=instance.oauth)
         if response.status_code == 429:
             instance.stats['errors'] += 1
-            print('Rate limit exceeded.')
+            print('Error. Rate limit exceeded.')
             # pretty_print_response(response)
             return
         instance.stats['calls'] += 1
@@ -130,12 +135,16 @@ def edit_post_legacy(instance, post, new_tags):
         'tags': ','.join(new_tags)
     }
 
+    # Check: Is first call? If yes, start timer
+    if not instance.started:
+        instance.start_timer()
+
     try:
         edit_response = requests.post(instance.request_url, auth=instance.oauth, data=payload)
         if edit_response.status_code == 429:
             instance.stats['errors'] += 1
-            print('Rate limit exceeded.')
-            return
+            print('Error: Rate limit exceeded. Stopping edits.')
+            return True
         instance.stats['calls'] += 1
         instance.stats['edited'] += 1
         edit_response.raise_for_status()
@@ -143,7 +152,8 @@ def edit_post_legacy(instance, post, new_tags):
         instance.stats['errors'] += 1
         print(f'Error editing post {post.id}: {error}')
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
- 
+    return False
+
  # Authentication: OAuth
 def edit_post_npf(instance, post, new_tags):
     edit_url = f'{API_BASE}/{API_VERSION}/blog/{instance.blog_identifier}/posts/{post.id}'
@@ -158,12 +168,16 @@ def edit_post_npf(instance, post, new_tags):
         'Accept': 'application/json'
     }
 
+    # Check: Is first call? If yes, start timer
+    if not instance.started:
+        instance.start_timer()
+
     try:
         edit_response = requests.put(instance.request_url, auth=instance.oauth, json=payload, headers=headers)
         if edit_response.status_code == 429:
             instance.stats['errors'] += 1
-            print('Rate limit exceeded.')
-            return
+            print('Error: Rate limit exceeded. Stopping edits.')
+            return True
         instance.stats['calls'] += 1
         instance.stats['edited'] += 1
         edit_response.raise_for_status()
@@ -172,6 +186,7 @@ def edit_post_npf(instance, post, new_tags):
         print(f'Error editing post {post.id}: {error}')
     
     print(f'Post {post.id} edited successfully.\n(status: {edit_response.json()['meta']['status']}, msg: {edit_response.json()['meta']['msg']})\n')
+    return False
 
 def edit_posts(instance):
     posts = gather_posts(instance)
@@ -191,11 +206,39 @@ def edit_posts(instance):
                 print('Yikes. You didn\'t add OR delete anything. What\'s the matter with you?')
                 continue
             if post.format == 'legacy':
-                edit_post_legacy(instance, post, new_tags)
+                limit_reached = edit_post_legacy(instance, post, new_tags)
+                if limit_reached:
+                    break
             else:
-                edit_post_npf(instance, post, new_tags)
+                limit_reached = edit_post_npf(instance, post, new_tags)
+                if limit_reached:
+                    break
     else:
         print('No posts found matching given parameters. 0 posts edited.')
+
+# Authentication: OAuth
+def delete_post(instance, post):
+    rparams = {
+            'id': post.id
+    }
+
+    try:
+        del_response = requests.post(instance.request_url, auth=instance.oauth, data=rparams)
+
+        if del_response.status_code == 429:
+            instance.stats['errors'] += 1
+            print('Error: Rate limit exceeded. Stopping deletions.')
+            # pretty_print_response(del_response)
+            return True
+        instance.stats['calls'] += 1
+        instance.stats['deleted'] += 1
+        del_response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        instance.stats['errors'] += 1
+        print(f'Error deleting post {post.id}: {error}')
+
+    print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
+    return False
 
 # Authentication: OAuth
 def delete_posts(instance):
@@ -213,27 +256,9 @@ def delete_posts(instance):
             print(f'Post {i}: {post}\n')
             i += 1
             
-            rparams = {
-                'id': post.id
-            }
-
-            try:
-                del_response = requests.post(instance.request_url, auth=instance.oauth, data=rparams)
-
-                if del_response.status_code == 429:
-                    instance.stats['errors'] += 1
-                    print('Rate limit exceeded. Stopping deletions.')
-                    # pretty_print_response(del_response)
-                    break
-                instance.stats['calls'] += 1
-                instance.stats['deleted'] += 1
-                del_response.raise_for_status()
-            except requests.exceptions.RequestException as error:
-                instance.stats['errors'] += 1
-                print(f'Error deleting post {post.id}: {error}')
-                continue
-
-            print(f'Post {post.id} deleted successfully.\n(status: {del_response.json()['meta']['status']}, msg: {del_response.json()['meta']['msg']})\n')
+            limit_reached = delete_post(instance, post)
+            if limit_reached:
+                break
     else:
         print('No posts found matching given parameters. 0 posts deleted.')
 

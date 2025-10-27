@@ -1,5 +1,6 @@
+import time
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
 from requests_oauthlib import OAuth1
 from helpers import append_qparams_to_url
 from query import read_posts, read_drafts, edit_posts, delete_posts, read_q_posts, read_likes, unlike_posts
@@ -15,7 +16,10 @@ class Instance:
     target: str = 'posts'   # Set a default
     function: str = 'read'
     params: Dict[str, object] = field(default_factory=dict)
-    stats: Dict[str, int] = field(default_factory=dict)
+    started: bool = False
+    start_time: Optional[float] = None
+    end_time: Optional[float] = None
+    stats: Dict[str, object] = field(default_factory=dict)
 
     def set_limit(self, limit: int):
         self.params['limit'] = limit
@@ -47,10 +51,15 @@ class Instance:
             return param
         else:
             return None
+        
+    def start_timer(self):
+        self.started = True
+        self.start_time = time.time()
     
     def init_stats(self):
         self.stats['calls'] = 0
         self.stats['errors'] = 0
+        self.stats['time'] = 0.0
         self.stats['fetched'] = 0
         self.stats['read'] = 0
         self.stats['unliked'] = 0
@@ -58,11 +67,18 @@ class Instance:
         self.stats['edited'] = 0
     
     def print_stats(self):
+        api_calls = self.stats['calls']
+        error_count = self.stats['errors']
+        time_elapsed = self.stats['time']
+        posts_fetched = self.stats['fetched']
+
         instance_summary = f'INSTANCE SUMMARY\n' \
-        '---------------------\n' \
-        f'API calls: {self.stats['calls']}\n' \
-        f'Errors: {self.stats['errors']}\n' \
-        f'Posts fetched: {self.stats['fetched']}\n'
+        '------------------------\n' \
+        f'API calls: {api_calls}\n' \
+        f'Errors: {error_count}\n' \
+        f'Time elapsed (s): {time_elapsed:.2f}\n' \
+        '------------------------\n' \
+        f'Posts fetched: {posts_fetched}\n'
 
         if self.stats['read'] != 0:
             instance_summary += f'Posts read: {self.stats['read']}\n'
@@ -100,3 +116,6 @@ class Instance:
         else:
             print('You have chosen to edit posts.\n')
             edit_posts(self)
+        
+        self.end_time = time.time()
+        self.stats['time'] = self.end_time - self.start_time
