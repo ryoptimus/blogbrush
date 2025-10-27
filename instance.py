@@ -92,6 +92,7 @@ class Instance:
         print(instance_summary)
         
     def run(self, qparams):
+        self.init_stats()
         append_qparams_to_url(self, qparams)
 
         if self.function == 'r' or self.function == 'read':
@@ -119,3 +120,6 @@ class Instance:
         
         self.end_time = time.time()
         self.stats['time'] = self.end_time - self.start_time
+
+        print('Request complete.\n')
+        self.print_stats()

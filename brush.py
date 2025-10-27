@@ -67,11 +67,7 @@ def session_instance_create(blog_name, oauth):
         function = function
     )
 
-    instance.init_stats()
     instance.run(qparams)
-
-    print('Request complete.\n')
-    instance.print_stats()
 
     valid_user_input = False
     while not valid_user_input:
