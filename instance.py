@@ -55,6 +55,11 @@ class Instance:
     def start_timer(self):
         self.started = True
         self.start_time = time.time()
+
+    def convert_time(self, time):
+        mins = int(time / 60.0)
+        secs = time - (mins * 60)
+        return mins, secs
     
     def init_stats(self):
         self.stats['calls'] = 0
@@ -75,10 +80,15 @@ class Instance:
         instance_summary = f'INSTANCE SUMMARY\n' \
         '------------------------\n' \
         f'API calls: {api_calls}\n' \
-        f'Errors: {error_count}\n' \
-        f'Time elapsed (s): {time_elapsed:.2f}\n' \
-        '------------------------\n' \
-        f'Posts fetched: {posts_fetched}\n'
+        f'Errors: {error_count}\n'
+
+        if time_elapsed >= 60.0:
+            mins, secs = self.convert_time(time_elapsed)
+            instance_summary += f'Time elapsed: {mins}min, {secs:.2f}sec\n'
+        else:
+            instance_summary += f'Time elapsed: {time_elapsed:.2f}sec\n'
+        
+        instance_summary += f'------------------------\nPosts fetched: {posts_fetched}\n'
 
         if self.stats['read'] != 0:
             instance_summary += f'Posts read: {self.stats['read']}\n'
