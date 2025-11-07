@@ -1,4 +1,5 @@
 # Helpers for validating user-provided query parameter inputs
+from datetime import datetime
 
 def qparams_are_valid(qparams_chosen):
     # Default case
@@ -58,21 +59,48 @@ def datestring_is_valid(datestring):
     date_parts = datestring.split(' ')
 
     if len(date_parts) != 5:
+        print('\tInvalid input. Date must be entered in year-month-date-hour-minute format separated by spaces.')
         return False
-    if int(date_parts[0]) > 2025 or int(date_parts[0]) < 2007:
+
+    year = int(date_parts[0])
+    month = int(date_parts[1])
+    day = int(date_parts[2])
+    hour = int(date_parts[3])
+    minute = int(date_parts[4])
+
+    current_year = datetime.now().year
+
+    if year > current_year or year < 2007:
         # Tumblr was founded in 2007. Year must be after that
         print('\tInvalid year. Year value must be between 2007 and 2025.')
         return False
-    if int(date_parts[1]) < 1 or int(date_parts[1]) > 12:
+    if month < 1 or month > 12:
         print('\tInvalid month. Month value must be between 1 and 12.')
         return False
-    if int(date_parts[2]) < 1 or int(date_parts[2]) > 31:
-        print('\tInvalid day. Day value must be between 1 and 31.')
+    if day < 1:
+        print('\tInvalid day. Day value must be greater than 1.')
         return False
-    if int(date_parts[3]) < 0 or int(date_parts[3]) > 23:
+    if month in [1, 3, 5, 7, 8, 10, 12]:
+        if day > 31:
+            print('\tInvalid day. Day value must not exceed 31.')
+            return False
+    if month in [4, 6, 9, 11]:
+        if day > 30:
+            print('\tInvalid day. Day value must not exceed 30.')
+            return False
+    if month == 2:
+        if year % 4 == 0 and year % 100 != 0:
+            if day > 29:
+                print('\tInvalid day. Day value must not exceed 29.')
+                return False
+        else:
+            if day > 28:
+                print('\tInvalid day. Day value must not exceed 28.')
+                return False
+    if hour < 0 or hour > 23:
         print('\tInvalid hour. Hour value must be between 0 and 23.')
         return False
-    if int(date_parts[4]) < 0 or int(date_parts[4]) > 59:
+    if minute < 0 or minute > 59:
         print('\tInvalid minute(s). Minute value must be between 0 and 59.')
         return False
     return True
