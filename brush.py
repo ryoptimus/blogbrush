@@ -1,12 +1,4 @@
 import os
-import re
-import pathlib
-import json
-import yaml
-import logging
-import logging.config
-from logging.handlers import TimedRotatingFileHandler
-import datetime
 import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
