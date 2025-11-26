@@ -374,3 +374,10 @@ def pretty_print_response(resp):
         print(json.dumps(resp.json(), indent=4))
     except ValueError:
         print(resp.text)
+
+def hashtagify(taglist):
+    hashtagified = []
+    for t in taglist:
+        tag = '#' + t
+        hashtagified.append(tag)
+    return hashtagified
