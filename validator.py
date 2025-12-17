@@ -1,6 +1,16 @@
 # Helpers for validating user-provided query parameter inputs
 from datetime import datetime
 
+# TODO: Fix this for more robust checking
+def valid_blogname(blogname):
+    if len(blogname) > 32:
+        print('Invalid input.')
+        return False
+    if blogname.contains(' '):
+        print('Invalid input.')
+        return False
+    return True
+
 def qparams_are_valid(qparams_chosen):
     # Default case
     if qparams_chosen == 'x x x x':

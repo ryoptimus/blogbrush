@@ -3,27 +3,30 @@ import json
 import datetime
 
 from validator import (
-    qparams_are_valid, tag_amount_is_valid, tag_is_valid, datestring_is_valid, limit_is_valid
+    valid_blogname, qparams_are_valid, tag_amount_is_valid, tag_is_valid, datestring_is_valid, limit_is_valid
 )
 
 def get_blog_name():
     confirm_blog = False
     while not confirm_blog:
         # Get blog name from user
-        blog_name = input('Enter blog name: ')
+        blogname = input('Enter blog name (e.g., pizza): ')
 
-        confirm_blog_name = input(f'You have entered {blog_name}. Please confirm (y/n): ')
+        while not valid_blogname(blogname):
+            blogname = input('Enter blog name (e.g., pizza): ')
+
+        confirm_blogname = input(f'You have entered {blogname}. Please confirm (y/n): ')
     
-        if confirm_blog_name.lower() == 'y':
+        if confirm_blogname.lower() == 'y':
             confirm_blog = True
 
-    if blog_name.endswith('.tumblr.com'):
-        blog_name = blog_name.split('.')[0]
+    if blogname.endswith('.tumblr.com'):
+        blogname = blogname.split('.')[0]
 
-    return blog_name
+    return blogname
 
-def craft_blog_id(blog_name):
-    return blog_name + '.tumblr.com'
+def craft_blog_id(blogname):
+    return blogname + '.tumblr.com'
 
 def get_target():
     target = 'x'
