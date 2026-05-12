@@ -2,8 +2,9 @@ import os
 import requests
 from requests_oauthlib import OAuth1
 from dotenv import load_dotenv
-from instance import Instance
-from helpers import (
+from typing import Optional
+from blogbrush.instance import Instance
+from blogbrush.helpers import (
     get_blog_name, craft_blog_id, get_target, get_function, get_qparams
 )
 
@@ -17,9 +18,9 @@ token_secret = os.getenv('TOKEN_SECRET')
 API_BASE = 'https://api.tumblr.com'
 API_VERSION = 'v2'
 
-def form_request_url(blog_identifier, target):
+def form_request_url(blog_id, target):
     # Construct the API URL
-    api_url = f'{API_BASE}/{API_VERSION}/blog/{blog_identifier}'
+    api_url = f'{API_BASE}/{API_VERSION}/blog/{blog_id}'
     if target.lower() == 'p' or target.lower() == 'posts':
         request_url = api_url + '/posts'
     elif target.lower() == 'q' or target.lower() == 'qposts':
@@ -38,27 +39,27 @@ def get_instance_details():
 
     return target, function, qparams
 
-def session_instance_create(blog_name, oauth):
-    if blog_name is None:
-        blog_name = get_blog_name()
+def session_instance_create(blogname, oauth):
+    if blogname is None:
+        blogname = get_blog_name()
     else:
         valid_user_input = False
         while not valid_user_input:
-            user_input = input(f'Target blog name is currently \'{blog_name}\'! Please confirm (y/n): ')
+            user_input = input(f'Target blog name is currently \'{blogname}\'! Please confirm (y/n): ')
             if user_input.lower() == 'y':
                 valid_user_input = True
             elif user_input.lower() == 'n':
                 valid_user_input = True
-                blog_name = get_blog_name()
+                blogname = get_blog_name()
             else:
                 print('Invalid input. Try again.')
 
     target, function, qparams = get_instance_details()
-    blog_identifier = craft_blog_id(blog_name)
-    request_url = form_request_url(blog_identifier, target)
+    blog_id = craft_blog_id(blogname)
+    request_url = form_request_url(blog_id, target)
 
-    instance = Instance(
-        blog_identifier = blog_identifier,
+    instance: Instance = Instance(
+        blog_identifier = blog_id,
         request_url = request_url,
         oauth = oauth,
         target = target,
@@ -80,7 +81,7 @@ def session_instance_create(blog_name, oauth):
         else:
             print('\tError: Invalid input.\n')
 
-    return blog_name, session_conclude
+    return blogname, session_conclude
 
 def session_run():
     # Create OAuth1 session
@@ -91,11 +92,11 @@ def session_run():
         token_secret
     )
 
-    blog_name = None
-    session_conclude = False
+    blogname: Optional[str] = None
+    session_conclude: bool = False
 
     while not session_conclude:
-        blog_name, session_conclude = session_instance_create(blog_name, oauth)
+        blogname, session_conclude = session_instance_create(blogname, oauth)
 
     print('\nSession concluded. See you next time!')
 

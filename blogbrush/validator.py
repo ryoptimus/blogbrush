@@ -1,22 +1,29 @@
 # Helpers for validating user-provided query parameter inputs
+from typing import List
 from datetime import datetime
 
 # TODO: Fix this for more robust checking
-def valid_blogname(blogname):
-    if len(blogname) > 32:
+def valid_blogname(blogname: str) -> bool:
+    if blogname is None:
         print('Invalid input.')
         return False
-    if blogname.contains(' '):
+    if len(blogname) > 32 or len(blogname) < 2:
+        print('Invalid input.')
+        return False
+    if ' ' in blogname:
+        print('Invalid input.')
+        return False
+    if blogname[0] == '-' or blogname[-1] == '-':
         print('Invalid input.')
         return False
     return True
 
-def qparams_are_valid(qparams_chosen):
+def qparams_are_valid(qparams_chosen: str) -> bool:
     # Default case
     if qparams_chosen == 'x x x x':
         return False
     
-    qparam_options = ['t', 'type', 'h', 'hashtag',
+    qparam_options: List[str] = ['t', 'type', 'h', 'hashtag',
                       'o', 'offset', 'b', 'before',
                       'a', 'after', 'l', 'limit',
                       'n', 'none']
@@ -42,7 +49,7 @@ def qparams_are_valid(qparams_chosen):
         print('Error: Invalid parameters detected.\nPlease try again.')
         return False
     
-def tag_amount_is_valid(tag_amount):
+def tag_amount_is_valid(tag_amount: str) -> bool:
     if tag_amount == None:
         return False
     if int(tag_amount) > 0 and int(tag_amount) < 5:
@@ -50,7 +57,7 @@ def tag_amount_is_valid(tag_amount):
     print('Tag amount must be between 1 and 4.')
     return False
     
-def tag_is_valid(tag):
+def tag_is_valid(tag: str) -> bool:
     if tag == None:
         return False
     elif not tag:
@@ -62,7 +69,7 @@ def tag_is_valid(tag):
     else: 
         return True
     
-def datestring_is_valid(datestring):
+def datestring_is_valid(datestring: str) -> bool:
     if not datestring:
         return False
     

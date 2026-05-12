@@ -2,11 +2,12 @@ import re
 import json
 import datetime
 
-from validator import (
+from typing import List, Optional
+from blogbrush.validator import (
     valid_blogname, qparams_are_valid, tag_amount_is_valid, tag_is_valid, datestring_is_valid, limit_is_valid
 )
 
-def get_blog_name():
+def get_blog_name() -> str:
     confirm_blog = False
     while not confirm_blog:
         # Get blog name from user
@@ -20,15 +21,12 @@ def get_blog_name():
         if confirm_blogname.lower() == 'y':
             confirm_blog = True
 
-    if blogname.endswith('.tumblr.com'):
-        blogname = blogname.split('.')[0]
-
     return blogname
 
-def craft_blog_id(blogname):
+def craft_blog_id(blogname: str) -> str:
     return blogname + '.tumblr.com'
 
-def get_target():
+def get_target() -> str:
     target = 'x'
     targets = ['p', 'posts',
                'q', 'qposts',
@@ -54,7 +52,7 @@ def get_target():
 
     return target
 
-def get_function(target):
+def get_function(target) -> str:
     function = 'x'
     if target == 'p' or target == 'posts':
         functions = ['r', 'read',
@@ -86,7 +84,7 @@ def get_function(target):
 
     return function
 
-def datestring_to_readable_format(datestring):
+def datestring_to_readable_format(datestring: str) -> str:
     datestring_formatted = ''
     date_parts = datestring.split(' ')
 
@@ -125,11 +123,11 @@ def datestring_to_readable_format(datestring):
 
     return datestring_formatted
 
-def format_tag(tag):
+def format_tag(tag: str) -> str:
     formatted_tag = tag.replace(' ', '+')
     return formatted_tag
 
-def get_qparams(target):
+def get_qparams(target) -> List[str]:
     qparams = 'x x x x'
 
     if target.lower() == 'p' or target.lower() == 'posts':
@@ -172,7 +170,7 @@ def get_qparams(target):
     qparams = list(qparams)
     return qparams
 
-def get_type(instance):
+def get_type(instance) -> None:
     type = 'subtweet'
     type_options = ['text', 'quote', 'link', 'answer', 'video', 'audio', 'photo', 'chat']
     while type not in type_options:
@@ -180,8 +178,8 @@ def get_type(instance):
     print(f'\tYou have chosen {type} as your post type.\n')
     instance.set_type(type)
 
-def get_tags(instance):
-    tag_amount = None
+def get_tags(instance) -> None:
+    tag_amount: Optional[str] = None
     print('\tHow many tags would you like to specify?')
     while not tag_amount_is_valid(tag_amount):
         tag_amount = input('\t\tAmount: ')
@@ -197,14 +195,14 @@ def get_tags(instance):
     print(f'\tYou have selected the following tag(s): {', '.join(tags)}\n')
     instance.set_tags(tags)
 
-def get_offset(instance):
-    offset = None
+def get_offset(instance) -> None:
+    offset: Optional[int] = None
     while offset is None or not offset.isdigit():
         offset = input('\tOffset (post number to start at): ')
     print(f'\tYou have chosen {offset} as your offset.\n')
     instance.set_offset(offset)
 
-def convert_to_unix_time(datestring):
+def convert_to_unix_time(datestring: str) -> int:
     if not datestring:
         return False
     
@@ -219,9 +217,9 @@ def convert_to_unix_time(datestring):
     res = dt.timestamp()
     return int(res)
 
-def get_searchdate(instance, date_qp):
+def get_searchdate(instance, date_qp: str) -> None:
     if date_qp == 'b' or date_qp == 'before':
-        before = None
+        before: Optional[str] = None
         print('\tInput the desired date to search before.\n\t' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.')
         while not datestring_is_valid(before):
@@ -229,7 +227,7 @@ def get_searchdate(instance, date_qp):
         print(f'\tYou have entered {datestring_to_readable_format(before)} as your desired search-before date.\n')
         instance.set_before(convert_to_unix_time(before))
     else:
-        after = None
+        after: Optional[str] = None
         print('\tInput the desired date to search after.\n\t' \
                 'Date must be entered in year-month-date-hour-minute format separated by spaces.')
         while not datestring_is_valid(after):
@@ -238,18 +236,18 @@ def get_searchdate(instance, date_qp):
         instance.set_after(convert_to_unix_time(after))
     
 def get_limit(instance):
-    limit = None
+    limit: Optional[str] = None
     while not limit_is_valid(limit):
         limit = input('\tInput limit of posts to alter / read (1-500): ')
     print(f'\tYou have entered {limit} as your desired limit.\n')
     instance.set_limit(int(limit))
 
-def parse_qparams(instance, qparams):
-    none = None
+def parse_qparams(instance, qparams) -> bool:
+    noParams: bool = False
 
     if 'n' in qparams or 'none' in qparams:
         print('You have no query parameters to set. Cool.\n')
-        none = True
+        noParams = True
     else:
         print('\nPlease provide values for your chosen query parameters.\n' \
               'If an invalid value is provided, you will be prompted to input the value again.\n')
@@ -267,7 +265,7 @@ def parse_qparams(instance, qparams):
             elif qp == 'l' or qp == 'limit':
                 get_limit(instance)
 
-    return none
+    return noParams
 
 def append_type_to_url(instance, type):
     # Also only works if the type has not been added yet
@@ -319,32 +317,33 @@ def append_param_to_url(instance, param_name, param):
     instance.request_url = request_url
 
 def append_qparams_to_url(instance, qparams):
-    none = parse_qparams(instance, qparams)
-    if not none:
-        type = instance.get_param('type')
+    noParams: bool = parse_qparams(instance, qparams)
+    if not noParams:
+        type: str = instance.get_param('type')
         if type:
             append_type_to_url(instance, type)
-        tags = instance.get_param('tags')
+        tags: List[str] = instance.get_param('tags')
         if tags:
             append_tags_to_url(instance, tags)
-        offset = instance.get_param('offset')
+        offset: int = instance.get_param('offset')
         if offset:
             append_param_to_url(instance, 'offset', offset)
-        before = instance.get_param('before')
+        before: int = instance.get_param('before')
         if before:
             append_param_to_url(instance, 'before', before)
-        after = instance.get_param('after')
+        after: int = instance.get_param('after')
         if after:
             append_param_to_url(instance, 'after', after)
-        limit = instance.get_param('limit')
+        limit: int = instance.get_param('limit')
         if limit:
             append_param_to_url(instance, 'limit', limit)
 
 def get_edit_info():
-    valid_fxn = False
+    valid_fxn: bool = False
+    tag_query: str = ''
     while not valid_fxn:
-        function_query = '\tDo you want to delete (d, delete) or add (a, add) a tag?\n\t\tYour entry: '
-        function = input(function_query)
+        function_query: str = '\tDo you want to delete (d, delete) or add (a, add) a tag?\n\t\tYour entry: '
+        function: str = input(function_query)
         if function == 'a' or function == 'add':
             valid_fxn = True
         if function == 'd' or function == 'delete':
@@ -353,14 +352,14 @@ def get_edit_info():
         tag_query = '\tInput the tag you wish to delete: '
     else:
         tag_query = '\tInput the tag you wish to add: '
-    valid_tag = False
+    valid_tag: bool = False
     while not valid_tag:
         tag = input(tag_query)
         if not ',' in tag:
             valid_tag = True
     return function, tag
 
-def edit_tags_list(function, tags, tag):
+def edit_tags_list(function: str, tags: List[str], tag: str) -> List[str]:
     if function == 'd' or function == 'delete':
         if tag not in tags:
             print(f'F@#&! Looks like this post doesn\'t contain tag \'{tag}.\' No editing to be done here...')
@@ -371,15 +370,15 @@ def edit_tags_list(function, tags, tag):
         tags.append(tag)
         return tags
     
-def pretty_print_response(resp):
+def pretty_print_response(resp) -> None:
     print(f'Status: {resp.status_code}')
     try:
         print(json.dumps(resp.json(), indent=4))
     except ValueError:
         print(resp.text)
 
-def hashtagify(taglist):
-    hashtagified = []
+def hashtagify(taglist: List[str]) -> List[str]:
+    hashtagified: List[str] = []
     for t in taglist:
         tag = '#' + t
         hashtagified.append(tag)

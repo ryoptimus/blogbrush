@@ -2,8 +2,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from requests_oauthlib import OAuth1
-from helpers import append_qparams_to_url
-from query import read_posts, read_drafts, edit_posts, delete_posts, read_q_posts, read_likes, unlike_posts
+from blogbrush.helpers import append_qparams_to_url
+from blogbrush.query import read_posts, read_drafts, edit_posts, delete_posts, read_q_posts, read_likes, unlike_posts
 
 # API_BASE = 'https://api.tumblr.com'
 # API_VERSION = 'v2'

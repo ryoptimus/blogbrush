@@ -1,7 +1,7 @@
 import json
 import requests
-from post import Post
-from helpers import append_param_to_url, get_edit_info, edit_tags_list, pretty_print_response
+from blogbrush.post import Post
+from blogbrush.helpers import append_param_to_url, get_edit_info, edit_tags_list, pretty_print_response, hashtagify
 
 API_BASE = 'https://api.tumblr.com'
 API_VERSION = 'v2'
@@ -109,8 +109,9 @@ def read_posts(instance):
 
     i = 1
     for post in posts:
-        print(f'Post {i}: {post}\n')
-        # print(post)
+        hashtagified = hashtagify(post.tags)
+        tags_str = ', '.join(hashtagified)
+        print(f'POST {i}:\n\tID: {post.id}\n\tURL: {post.url}\n\tType: {post.type}\n\tFormat: {post.format}\n\tTimestamp: {post.timestamp}\n\tDate: {post.date}\n\tReblog key: {post.reblog_key}\n\tSummary: {post.summary}\n\tTags: {tags_str}\n')
         i += 1
 
 def read_drafts(instance):
